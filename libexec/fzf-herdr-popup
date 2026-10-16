@@ -10,6 +10,9 @@ trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
+# fzf-herdr stops this process group when it is stopped first.
+echo "$$" > "$dir/popup_pid"
+
 args=()
 while IFS= read -r -d '' arg; do
   args+=("$arg")

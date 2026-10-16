@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # Fake herdr for tests: records the arguments of "plugin pane open" and runs the popup script
-# in the background with the given --cwd and --env, as herdr does for the fzf pane.
+# in its own process group with the given --cwd and --env, as herdr does for the fzf pane.
 #   FAKE_HERDR_RECORD  directory to write "args" (NUL-separated) into
+#   FAKE_HERDR_ERROR   error code to fail with instead of opening the popup
 
 printf '%s\0' "$@" > "$FAKE_HERDR_RECORD/args"
+if [[ -n $FAKE_HERDR_ERROR ]]; then
+  echo "{\"error\":{\"code\":\"$FAKE_HERDR_ERROR\",\"message\":\"fake\"},\"id\":\"cli:plugin\"}" >&2
+  exit 1
+fi
 root=$(cd "$(dirname "$0")/../.." && pwd)
 
 shift 3 # plugin pane open
@@ -17,5 +22,6 @@ while [[ $# -gt 0 ]]; do
   shift 2
 done
 
+set -m
 (cd "$cwd" && exec env "${envs[@]}" "$root/libexec/fzf-herdr-popup") < /dev/null > /dev/null 2>&1 3>&- &
 echo '{"id":"cli:plugin","result":{"type":"ok"}}'

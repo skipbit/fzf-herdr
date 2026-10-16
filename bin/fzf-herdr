@@ -1,10 +1,37 @@
 #!/usr/bin/env bash
 # fzf-herdr: runs fzf in a herdr popup. Takes the same arguments as fzf.
+# Outside herdr, or when the popup cannot be opened, runs fzf in place.
+
+[[ -n $HERDR_ENV ]] || exec fzf "$@"
 
 herdr=${HERDR_BIN_PATH:-herdr}
 
 dir=$(mktemp -d "${TMPDIR:-/tmp}/fzf-herdr-XXXXXX") || exit 2
-trap 'rm -rf "$dir"' EXIT
+
+# shellcheck disable=SC2329 # called from a trap
+cleanup() {
+  local pids
+  pids=$(jobs -p)
+  # shellcheck disable=SC2086
+  [[ -z $pids ]] || kill $pids 2> /dev/null
+  rm -rf "$dir"
+}
+
+# Closes the popup, fzf included, when this script is stopped first.
+# shellcheck disable=SC2329 # called from traps
+stop_popup() {
+  local pid
+  trap '' USR1
+  read -r pid 2> /dev/null < "$dir/popup_pid" && kill -TERM -- "-$pid" 2> /dev/null
+  exit "$1"
+}
+
+trap cleanup EXIT
+# The popup script sends USR1 when it ends without reporting the exit code.
+trap 'exit 130' USR1
+trap 'stop_popup 129' HUP
+trap 'stop_popup 130' INT
+trap 'stop_popup 143' TERM
 
 printf '%s\0' "$@" > "$dir/args"
 mkfifo "$dir/out" "$dir/code"
@@ -24,11 +51,22 @@ open_args=(
 [[ -n $FZF_HERDR_WIDTH ]] && open_args+=(--width "$FZF_HERDR_WIDTH")
 [[ -n $FZF_HERDR_HEIGHT ]] && open_args+=(--height "$FZF_HERDR_HEIGHT")
 
-"$herdr" plugin pane open "${open_args[@]}" > /dev/null || exit 2
+if ! error=$("$herdr" plugin pane open "${open_args[@]}" 2>&1 > /dev/null); then
+  reason=$(sed -n 's/.*"code":"\([^"]*\)".*/\1/p' <<< "$error")
+  if [[ $reason != ui_busy ]]; then
+    echo "fzf-herdr: cannot open the herdr popup (${reason:-${error%%$'\n'*}}); running fzf in place" >&2
+  fi
+  fzf "$@"
+  exit
+fi
 
 if [[ -p $dir/in ]]; then
   cat <&0 > "$dir/in" &
 fi
-cat "$dir/out"
-read -r code < "$dir/code"
+# Each pipe is read by a background job so that the traps run without waiting for the popup.
+cat "$dir/out" &
+wait $!
+cat "$dir/code" > "$dir/status" &
+wait $!
+read -r code < "$dir/status"
 exit "${code:-2}"

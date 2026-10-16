@@ -1,5 +1,6 @@
 #!/usr/bin/env bats
 # Tests for bin/fzf-herdr, with the fake herdr running the popup script in place of a real popup.
+# shellcheck disable=SC2030,SC2031 # each test runs in its own subshell
 
 setup_file() {
   export BATS_TEST_TIMEOUT=10
@@ -11,7 +12,8 @@ setup() {
   export FAKE_HERDR_RECORD="$BATS_TEST_TMPDIR/herdr"
   mkdir "$FAKE_HERDR_RECORD"
   export TMPDIR="$BATS_TEST_TMPDIR"
-  unset FZF_DEFAULT_COMMAND FZF_DEFAULT_OPTS FZF_DEFAULT_OPTS_FILE
+  export HERDR_ENV=1
+  unset FAKE_HERDR_ERROR FZF_DEFAULT_COMMAND FZF_DEFAULT_OPTS FZF_DEFAULT_OPTS_FILE
   unset RUNEWIDTH_EASTASIAN BAT_THEME FZF_HERDR_WIDTH FZF_HERDR_HEIGHT
 }
 
@@ -39,6 +41,33 @@ herdr_received() {
     [[ ${args[i]} == "$1" && ${args[i + 1]} == $2 ]] && return 0
   done
   return 1
+}
+
+wait_for_file() {
+  local i
+  for ((i = 0; i < 30; i++)); do
+    [ -e "$1" ] && return 0
+    sleep 0.1
+  done
+  return 1
+}
+
+# Starts fzf-herdr in the background with a slow fzf and waits until the popup script is running.
+start_with_slow_fzf() {
+  use_fake_fzf
+  export FAKE_FZF_SLEEP=5
+  printf 'candidate\n' | "$fzf_herdr" > /dev/null 3>&- &
+  caller_pid=$!
+  wait_for_file "$FAKE_HERDR_RECORD/args"
+  session_dir=$(tr '\0' '\n' < "$FAKE_HERDR_RECORD/args" | sed -n 's/^_FZF_HERDR_DIR=//p')
+  wait_for_file "$session_dir/popup_pid"
+  read -r popup_pid < "$session_dir/popup_pid"
+}
+
+# Runs fzf-herdr on piped candidates and keeps its output and error output.
+run_filter() {
+  out=$(printf '%s\n' apple banana | "$fzf_herdr" --filter ban 2> "$BATS_TEST_TMPDIR/stderr")
+  err=$(cat "$BATS_TEST_TMPDIR/stderr")
 }
 
 @test "returns the selection and the exit code of fzf" {
@@ -124,4 +153,68 @@ herdr_received() {
 
   herdr_received --env '_FZF_HERDR_DIR=*'
   [ -z "$(find "$BATS_TEST_TMPDIR" -maxdepth 1 -name 'fzf-herdr-*')" ]
+}
+
+@test "runs fzf in place outside herdr" {
+  export HERDR_ENV=
+
+  run_filter
+
+  [ "$out" = "banana" ]
+  [ -z "$err" ]
+  [ ! -e "$FAKE_HERDR_RECORD/args" ]
+}
+
+@test "runs fzf in place without a warning while herdr is busy" {
+  export FAKE_HERDR_ERROR=ui_busy
+
+  run_filter
+
+  [ "$out" = "banana" ]
+  [ -z "$err" ]
+}
+
+@test "warns and runs fzf in place when the popup cannot be opened" {
+  export FAKE_HERDR_ERROR=plugin_not_found
+
+  run_filter
+
+  [ "$out" = "banana" ]
+  [ "$err" = "fzf-herdr: cannot open the herdr popup (plugin_not_found); running fzf in place" ]
+}
+
+@test "warns and runs fzf in place when herdr cannot be run" {
+  export HERDR_BIN_PATH="$BATS_TEST_TMPDIR/missing"
+
+  run_filter
+
+  [ "$out" = "banana" ]
+  [[ $err == "fzf-herdr: cannot open the herdr popup ("*"); running fzf in place" ]]
+}
+
+@test "ends with 130 when the popup closes without reporting" {
+  start_with_slow_fzf
+
+  kill -HUP -- "-$popup_pid"
+  rc=0
+  wait "$caller_pid" || rc=$?
+
+  [ "$rc" -eq 130 ]
+  [ ! -e "$session_dir" ]
+}
+
+@test "closes the popup when it is stopped first" {
+  start_with_slow_fzf
+
+  start=$SECONDS
+  kill -TERM "$caller_pid"
+  rc=0
+  wait "$caller_pid" || rc=$?
+  sleep 0.3
+
+  [ "$rc" -eq 143 ]
+  [ $((SECONDS - start)) -lt 3 ]
+  run kill -0 -- "-$popup_pid"
+  [ "$status" -ne 0 ]
+  [ ! -e "$session_dir" ]
 }
