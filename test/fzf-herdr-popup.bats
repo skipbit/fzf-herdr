@@ -60,7 +60,7 @@ run_popup() {
 
   run_popup
 
-  cmp <(printf '%s\0' "${options[@]}" --no-height --bind=ctrl-z:ignore) "$FAKE_FZF_RECORD/args"
+  cmp <(printf '%s\0' "${options[@]}" --no-height --border=none --margin=0,1 --bind=ctrl-z:ignore) "$FAKE_FZF_RECORD/args"
 }
 
 @test "feeds the candidates from the in pipe" {

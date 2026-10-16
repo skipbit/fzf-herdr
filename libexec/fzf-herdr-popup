@@ -14,7 +14,8 @@ args=()
 while IFS= read -r -d '' arg; do
   args+=("$arg")
 done < "$dir/args"
-args+=(--no-height --bind=ctrl-z:ignore)
+# herdr draws the popup frame, so fzf's own border is dropped and only a narrow side margin is kept.
+args+=(--no-height --border=none '--margin=0,1' --bind=ctrl-z:ignore)
 
 if [[ -p $dir/in ]]; then
   fzf "${args[@]}" < "$dir/in" > "$dir/out"
