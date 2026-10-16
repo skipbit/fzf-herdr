@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Runs fzf inside the herdr popup and reports the result back to fzf-herdr.
+
+dir=${_FZF_HERDR_DIR:?fzf-herdr-popup: _FZF_HERDR_DIR is not set}
+caller_pid=${_FZF_HERDR_CALLER_PID:?fzf-herdr-popup: _FZF_HERDR_CALLER_PID is not set}
+
+# Tell fzf-herdr to stop waiting when this script ends before reporting the exit code.
+trap 'kill -USR1 "$caller_pid" 2> /dev/null' EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+args=()
+while IFS= read -r -d '' arg; do
+  args+=("$arg")
+done < "$dir/args"
+args+=(--no-height --bind=ctrl-z:ignore)
+
+if [[ -p $dir/in ]]; then
+  fzf "${args[@]}" < "$dir/in" > "$dir/out"
+else
+  fzf "${args[@]}" > "$dir/out"
+fi
+code=$?
+
+trap - EXIT
+echo "$code" > "$dir/code"

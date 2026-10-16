@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Fake fzf for tests: records its arguments and standard input, then prints a canned result.
+#   FAKE_FZF_RECORD  directory to write "args" (NUL-separated) and "stdin" into
+#   FAKE_FZF_OUTPUT  text to print
+#   FAKE_FZF_EXIT    exit code (default: 0)
+#   FAKE_FZF_SLEEP   seconds to wait before exiting (default: 0)
+
+printf '%s\0' "$@" > "$FAKE_FZF_RECORD/args"
+cat > "$FAKE_FZF_RECORD/stdin"
+sleep "${FAKE_FZF_SLEEP:-0}"
+printf '%s' "${FAKE_FZF_OUTPUT-}"
+exit "${FAKE_FZF_EXIT:-0}"
