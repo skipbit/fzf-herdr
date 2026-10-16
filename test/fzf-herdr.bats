@@ -95,6 +95,14 @@ run_filter() {
   cmp <(printf '%s\0' "${options[@]}" --no-height --border=none --margin=0,1 --bind=ctrl-z:ignore) "$FAKE_FZF_RECORD/args"
 }
 
+@test "passes no options to fzf when called without arguments" {
+  use_fake_fzf
+
+  "$fzf_herdr" < /dev/null
+
+  cmp <(printf '%s\0' --no-height --border=none --margin=0,1 --bind=ctrl-z:ignore) "$FAKE_FZF_RECORD/args"
+}
+
 @test "opens the fzf pane of the plugin in the current directory" {
   use_fake_fzf
   cd "$BATS_TEST_TMPDIR"

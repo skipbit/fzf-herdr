@@ -33,7 +33,9 @@ trap 'stop_popup 129' HUP
 trap 'stop_popup 130' INT
 trap 'stop_popup 143' TERM
 
-printf '%s\0' "$@" > "$dir/args"
+# printf would write one empty argument when there are none.
+: > "$dir/args"
+[[ $# -eq 0 ]] || printf '%s\0' "$@" > "$dir/args"
 mkfifo "$dir/out" "$dir/code"
 [[ -t 0 ]] || mkfifo "$dir/in"
 
