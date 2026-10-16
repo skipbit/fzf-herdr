@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# fzf-herdr: runs fzf in a herdr popup. Takes the same arguments as fzf.
+
+herdr=${HERDR_BIN_PATH:-herdr}
+
+dir=$(mktemp -d "${TMPDIR:-/tmp}/fzf-herdr-XXXXXX") || exit 2
+trap 'rm -rf "$dir"' EXIT
+
+printf '%s\0' "$@" > "$dir/args"
+mkfifo "$dir/out" "$dir/code"
+[[ -t 0 ]] || mkfifo "$dir/in"
+
+# fzf's shell integration empties FZF_DEFAULT_* on purpose, so they are passed even when empty.
+open_args=(
+  --plugin skipbit.fzf-herdr --entrypoint fzf --cwd "$PWD"
+  --env "_FZF_HERDR_DIR=$dir" --env "_FZF_HERDR_CALLER_PID=$$"
+  --env "FZF_DEFAULT_COMMAND=$FZF_DEFAULT_COMMAND"
+  --env "FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS"
+  --env "FZF_DEFAULT_OPTS_FILE=$FZF_DEFAULT_OPTS_FILE"
+  --env "PATH=$PATH"
+)
+[[ -n $RUNEWIDTH_EASTASIAN ]] && open_args+=(--env "RUNEWIDTH_EASTASIAN=$RUNEWIDTH_EASTASIAN")
+[[ -n $BAT_THEME ]] && open_args+=(--env "BAT_THEME=$BAT_THEME")
+[[ -n $FZF_HERDR_WIDTH ]] && open_args+=(--width "$FZF_HERDR_WIDTH")
+[[ -n $FZF_HERDR_HEIGHT ]] && open_args+=(--height "$FZF_HERDR_HEIGHT")
+
+"$herdr" plugin pane open "${open_args[@]}" > /dev/null || exit 2
+
+if [[ -p $dir/in ]]; then
+  cat <&0 > "$dir/in" &
+fi
+cat "$dir/out"
+read -r code < "$dir/code"
+exit "${code:-2}"
