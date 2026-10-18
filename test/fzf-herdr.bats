@@ -1,6 +1,5 @@
 #!/usr/bin/env bats
 # Tests for bin/fzf-herdr, with the fake herdr running the popup script in place of a real popup.
-# shellcheck disable=SC2030,SC2031 # each test runs in its own subshell
 
 setup_file() {
   export BATS_TEST_TIMEOUT=10
@@ -18,10 +17,11 @@ setup() {
 }
 
 teardown() {
-  local pids
-  pids=$(jobs -p)
-  # shellcheck disable=SC2086
-  [ -z "$pids" ] || { kill $pids && wait; } 2> /dev/null || true
+  local pid
+  for pid in $(jobs -p); do
+    kill "$pid" 2> /dev/null
+  done
+  wait 2> /dev/null || true
 }
 
 use_fake_fzf() {
@@ -30,15 +30,31 @@ use_fake_fzf() {
   mkdir "$FAKE_FZF_RECORD"
 }
 
-# Succeeds when the fake herdr received the option followed by a value matching the pattern.
-herdr_received() {
-  local args=() arg i
+# Reads the arguments that the fake herdr received into herdr_args.
+read_herdr_args() {
+  local arg
+  herdr_args=()
   while IFS= read -r -d '' arg; do
-    args+=("$arg")
+    herdr_args+=("$arg")
   done < "$FAKE_HERDR_RECORD/args"
-  for ((i = 0; i + 1 < ${#args[@]}; i++)); do
-    # shellcheck disable=SC2053
-    [[ ${args[i]} == "$1" && ${args[i + 1]} == $2 ]] && return 0
+}
+
+# Succeeds when the fake herdr received the option followed by the value.
+herdr_received() {
+  local i
+  read_herdr_args
+  for ((i = 0; i + 1 < ${#herdr_args[@]}; i++)); do
+    [[ ${herdr_args[i]} == "$1" && ${herdr_args[i + 1]} == "$2" ]] && return 0
+  done
+  return 1
+}
+
+# Succeeds when the fake herdr received the option followed by a value that starts with the prefix.
+herdr_received_prefix() {
+  local i
+  read_herdr_args
+  for ((i = 0; i + 1 < ${#herdr_args[@]}; i++)); do
+    [[ ${herdr_args[i]} == "$1" && ${herdr_args[i + 1]} == "$2"* ]] && return 0
   done
   return 1
 }
@@ -81,9 +97,9 @@ run_filter() {
 }
 
 @test "feeds piped candidates to fzf" {
-  out=$(printf '%s\n' apple banana 'big banana' | "$fzf_herdr" --filter ban)
+  run_filter
 
-  [ "$out" = $'banana\nbig banana' ]
+  [ "$out" = "banana" ]
 }
 
 @test "passes the options to fzf unchanged" {
@@ -130,9 +146,9 @@ run_filter() {
   use_fake_fzf
 
   "$fzf_herdr" < /dev/null
-  run herdr_received --env 'RUNEWIDTH_EASTASIAN=*'
+  run herdr_received_prefix --env 'RUNEWIDTH_EASTASIAN='
   [ "$status" -eq 1 ]
-  run herdr_received --env 'BAT_THEME=*'
+  run herdr_received_prefix --env 'BAT_THEME='
   [ "$status" -eq 1 ]
 
   RUNEWIDTH_EASTASIAN=1 BAT_THEME=Dracula "$fzf_herdr" < /dev/null
@@ -144,9 +160,9 @@ run_filter() {
   use_fake_fzf
 
   "$fzf_herdr" < /dev/null
-  run herdr_received --width '*'
+  run herdr_received_prefix --width ''
   [ "$status" -eq 1 ]
-  run herdr_received --height '*'
+  run herdr_received_prefix --height ''
   [ "$status" -eq 1 ]
 
   FZF_HERDR_WIDTH=80% FZF_HERDR_HEIGHT=30 "$fzf_herdr" < /dev/null
@@ -159,14 +175,12 @@ run_filter() {
 
   "$fzf_herdr" < /dev/null
 
-  herdr_received --env '_FZF_HERDR_DIR=*'
+  herdr_received_prefix --env '_FZF_HERDR_DIR='
   [ -z "$(find "$BATS_TEST_TMPDIR" -maxdepth 1 -name 'fzf-herdr-*')" ]
 }
 
 @test "runs fzf in place outside herdr" {
-  export HERDR_ENV=
-
-  run_filter
+  HERDR_ENV='' run_filter
 
   [ "$out" = "banana" ]
   [ -z "$err" ]
@@ -174,27 +188,21 @@ run_filter() {
 }
 
 @test "runs fzf in place without a warning while herdr is busy" {
-  export FAKE_HERDR_ERROR=ui_busy
-
-  run_filter
+  FAKE_HERDR_ERROR=ui_busy run_filter
 
   [ "$out" = "banana" ]
   [ -z "$err" ]
 }
 
 @test "warns and runs fzf in place when the popup cannot be opened" {
-  export FAKE_HERDR_ERROR=plugin_not_found
-
-  run_filter
+  FAKE_HERDR_ERROR=plugin_not_found run_filter
 
   [ "$out" = "banana" ]
   [ "$err" = "fzf-herdr: cannot open the herdr popup (plugin_not_found); running fzf in place" ]
 }
 
 @test "warns and runs fzf in place when herdr cannot be run" {
-  export HERDR_BIN_PATH="$BATS_TEST_TMPDIR/missing"
-
-  run_filter
+  HERDR_BIN_PATH="$BATS_TEST_TMPDIR/missing" run_filter
 
   [ "$out" = "banana" ]
   [[ $err == "fzf-herdr: cannot open the herdr popup ("*"); running fzf in place" ]]
