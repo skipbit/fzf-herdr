@@ -1,13 +1,7 @@
 #!/usr/bin/env bash
 # fzf-herdr: runs fzf in a herdr popup. Takes the same arguments as fzf.
-# A first argument --fzf-herdr-entrypoint=ID opens the plugin's pane ID instead of fzf.
+# FZF_HERDR_ENTRYPOINT names the plugin's pane to open, in place of the default pane fzf.
 # Outside herdr, or when the popup cannot be opened, runs fzf in place.
-
-entrypoint=fzf
-if [[ $1 == --fzf-herdr-entrypoint=* ]]; then
-  entrypoint=${1#*=}
-  shift
-fi
 
 [[ -n $HERDR_ENV ]] || exec fzf "$@"
 
@@ -48,7 +42,7 @@ mkfifo "$dir/out" "$dir/code"
 
 # fzf's shell integration empties FZF_DEFAULT_* on purpose, so they are passed even when empty.
 open_args=(
-  --plugin skipbit.fzf-herdr --entrypoint "$entrypoint" --cwd "$PWD"
+  --plugin skipbit.fzf-herdr --entrypoint "${FZF_HERDR_ENTRYPOINT:-fzf}" --cwd "$PWD"
   --env "_FZF_HERDR_DIR=$dir" --env "_FZF_HERDR_CALLER_PID=$$"
   --env "FZF_DEFAULT_COMMAND=$FZF_DEFAULT_COMMAND"
   --env "FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS"

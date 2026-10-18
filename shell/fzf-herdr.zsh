@@ -14,9 +14,9 @@
 # The entrypoint, picked by the calling widget, sets the title of the popup.
 __fzfcmd() {
   case $WIDGET in
-    fzf-history-widget) echo fzf-herdr --fzf-herdr-entrypoint=history ;;
-    fzf-file-widget) echo fzf-herdr --fzf-herdr-entrypoint=files ;;
-    fzf-cd-widget) echo fzf-herdr --fzf-herdr-entrypoint=directories ;;
+    fzf-history-widget) echo env FZF_HERDR_ENTRYPOINT=history fzf-herdr ;;
+    fzf-file-widget) echo env FZF_HERDR_ENTRYPOINT=files fzf-herdr ;;
+    fzf-cd-widget) echo env FZF_HERDR_ENTRYPOINT=directories fzf-herdr ;;
     *) echo fzf-herdr ;;
   esac
 }
@@ -25,6 +25,6 @@ __fzfcmd() {
 if (( ! $+functions[_fzf_comprun] )); then
   _fzf_comprun() {
     shift
-    fzf-herdr --fzf-herdr-entrypoint=completion "$@"
+    FZF_HERDR_ENTRYPOINT=completion fzf-herdr "$@"
   }
 fi

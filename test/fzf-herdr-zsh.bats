@@ -50,12 +50,13 @@ $1"
   [ "$output" = "fzf-herdr" ]
 }
 
-@test "picks the entrypoint from the widget of fzf's key binding" {
-  run_zsh 'for WIDGET in fzf-history-widget fzf-file-widget fzf-cd-widget; do __fzfcmd; done'
-
-  [ "${lines[0]}" = "fzf-herdr --fzf-herdr-entrypoint=history" ]
-  [ "${lines[1]}" = "fzf-herdr --fzf-herdr-entrypoint=files" ]
-  [ "${lines[2]}" = "fzf-herdr --fzf-herdr-entrypoint=directories" ]
+@test "opens the pane picked by the widget of fzf's key binding" {
+  local pair
+  for pair in fzf-history-widget:history fzf-file-widget:files fzf-cd-widget:directories; do
+    # fzf's key bindings run the output of __fzfcmd unquoted, as this does.
+    run_zsh "WIDGET=${pair%%:*}; \$(__fzfcmd) --filter x < /dev/null"
+    [ "$(tr '\0' '\n' < "$FAKE_HERDR_RECORD/args" | grep -A1 -x -- --entrypoint | tail -1)" = "${pair#*:}" ]
+  done
 }
 
 @test "knows the widgets that fzf binds to its keys" {
@@ -74,7 +75,7 @@ $1"
 }
 
 @test "uses only entrypoints that the manifest defines, titled after them" {
-  ids=$(grep -o -- '--fzf-herdr-entrypoint=[a-z]*' "$zsh_file" | cut -d= -f2)
+  ids=$(grep -o 'FZF_HERDR_ENTRYPOINT=[a-z]*' "$zsh_file" | cut -d= -f2)
 
   [ "$(wc -l <<< "$ids")" -eq 4 ]
   for id in $ids; do

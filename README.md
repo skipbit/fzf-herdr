@@ -58,14 +58,14 @@ The popup is titled after what you are searching: `fzf: files` (CTRL-T), `fzf: h
 git branch | fzf-herdr --multi
 ```
 
-This popup is titled `fzf`. To use one of the titles above, put `--fzf-herdr-entrypoint=ID` first, where ID is `files`, `history`, `directories`, or `completion`:
+This popup is titled `fzf`. To use one of the titles above, set `FZF_HERDR_ENTRYPOINT` to `files`, `history`, `directories`, or `completion`:
 
 ```sh
-git ls-files | fzf-herdr --fzf-herdr-entrypoint=files --multi
+git ls-files | FZF_HERDR_ENTRYPOINT=files fzf-herdr --multi
 ```
 
 Outside Herdr, or while another popup is open, fzf-herdr runs fzf in place.
-When the popup cannot be opened for another reason, such as the plugin being disabled or an unknown ID, it prints a one-line warning and runs fzf in place.
+When the popup cannot be opened for another reason, such as the plugin being disabled or an unknown `FZF_HERDR_ENTRYPOINT`, it prints a one-line warning and runs fzf in place.
 
 In the popup, Herdr draws the frame, so fzf's `--height`, `--border`, and `--margin` are replaced with a narrow side margin.
 The popup receives `FZF_DEFAULT_COMMAND`, `FZF_DEFAULT_OPTS`, `FZF_DEFAULT_OPTS_FILE`, `PATH`, `RUNEWIDTH_EASTASIAN`, and `BAT_THEME` from your shell; other environment variables come from the Herdr server.
@@ -73,7 +73,7 @@ The popup receives `FZF_DEFAULT_COMMAND`, `FZF_DEFAULT_OPTS`, `FZF_DEFAULT_OPTS_
 ### Custom `_fzf_comprun`
 
 If you define [`_fzf_comprun`](https://github.com/junegunn/fzf#customizing-fzf-options-for-completion) yourself, fzf-herdr keeps it.
-Call `fzf-herdr --fzf-herdr-entrypoint=completion` instead of `fzf` in it to use the popup titled `fzf: completion`:
+Call `fzf-herdr` instead of `fzf` in it to use the popup, and set `FZF_HERDR_ENTRYPOINT=completion` to title it `fzf: completion`:
 
 ```zsh
 _fzf_comprun() {
@@ -81,18 +81,19 @@ _fzf_comprun() {
   shift
 
   case "$command" in
-    cd) fzf-herdr --fzf-herdr-entrypoint=completion --preview 'tree -C {} | head -200' "$@" ;;
-    *)  fzf-herdr --fzf-herdr-entrypoint=completion --preview 'bat -n --color=always {}' "$@" ;;
+    cd) FZF_HERDR_ENTRYPOINT=completion fzf-herdr --preview 'tree -C {} | head -200' "$@" ;;
+    *)  FZF_HERDR_ENTRYPOINT=completion fzf-herdr --preview 'bat -n --color=always {}' "$@" ;;
   esac
 }
 ```
 
 ## Configuration
 
-| Variable           | Description                                      | Default |
-| ------------------ | ------------------------------------------------ | ------- |
-| `FZF_HERDR_WIDTH`  | Popup width, in cells or as a percentage (`80%`)  | `50%`   |
-| `FZF_HERDR_HEIGHT` | Popup height, in cells or as a percentage (`80%`) | `50%`   |
+| Variable               | Description                                                                          | Default |
+| ---------------------- | ------------------------------------------------------------------------------------ | ------- |
+| `FZF_HERDR_WIDTH`      | Popup width, in cells or as a percentage (`80%`)                                     | `50%`   |
+| `FZF_HERDR_HEIGHT`     | Popup height, in cells or as a percentage (`80%`)                                    | `50%`   |
+| `FZF_HERDR_ENTRYPOINT` | Popup to open: `files`, `history`, `directories`, or `completion` for the titles above | `fzf`   |
 
 ## Development
 
