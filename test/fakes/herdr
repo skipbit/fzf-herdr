@@ -9,7 +9,7 @@ if [[ -n $FAKE_HERDR_ERROR ]]; then
   echo "{\"error\":{\"code\":\"$FAKE_HERDR_ERROR\",\"message\":\"fake\"},\"id\":\"cli:plugin\"}" >&2
   exit 1
 fi
-root=$(cd "$(dirname "$0")/../.." && pwd)
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)
 
 shift 3 # plugin pane open
 envs=()
