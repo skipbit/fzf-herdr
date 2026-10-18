@@ -50,6 +50,7 @@ To uninstall, run `herdr plugin unlink skipbit.fzf-herdr`, remove the line from 
 ## Usage
 
 Inside Herdr, CTRL-T, CTRL-R, ALT-C, and `**<TAB>` open fzf in a popup. Select and cancel as you do in plain fzf.
+The popup is titled after what you are searching: `fzf: files` (CTRL-T), `fzf: history` (CTRL-R), `fzf: directories` (ALT-C), or `fzf: completion` (`**<TAB>`).
 
 `fzf-herdr` takes the same arguments as fzf, so you can also use it directly:
 
@@ -57,8 +58,14 @@ Inside Herdr, CTRL-T, CTRL-R, ALT-C, and `**<TAB>` open fzf in a popup. Select a
 git branch | fzf-herdr --multi
 ```
 
+This popup is titled `fzf`. To use one of the titles above, put `--fzf-herdr-entrypoint=ID` first, where ID is `files`, `history`, `directories`, or `completion`:
+
+```sh
+git ls-files | fzf-herdr --fzf-herdr-entrypoint=files --multi
+```
+
 Outside Herdr, or while another popup is open, fzf-herdr runs fzf in place.
-When the popup cannot be opened for another reason, such as the plugin being disabled, it prints a one-line warning and runs fzf in place.
+When the popup cannot be opened for another reason, such as the plugin being disabled or an unknown ID, it prints a one-line warning and runs fzf in place.
 
 In the popup, Herdr draws the frame, so fzf's `--height`, `--border`, and `--margin` are replaced with a narrow side margin.
 The popup receives `FZF_DEFAULT_COMMAND`, `FZF_DEFAULT_OPTS`, `FZF_DEFAULT_OPTS_FILE`, `PATH`, `RUNEWIDTH_EASTASIAN`, and `BAT_THEME` from your shell; other environment variables come from the Herdr server.
@@ -66,7 +73,7 @@ The popup receives `FZF_DEFAULT_COMMAND`, `FZF_DEFAULT_OPTS`, `FZF_DEFAULT_OPTS_
 ### Custom `_fzf_comprun`
 
 If you define [`_fzf_comprun`](https://github.com/junegunn/fzf#customizing-fzf-options-for-completion) yourself, fzf-herdr keeps it.
-Call `fzf-herdr` instead of `fzf` in it to use the popup:
+Call `fzf-herdr --fzf-herdr-entrypoint=completion` instead of `fzf` in it to use the popup titled `fzf: completion`:
 
 ```zsh
 _fzf_comprun() {
@@ -74,8 +81,8 @@ _fzf_comprun() {
   shift
 
   case "$command" in
-    cd) fzf-herdr --preview 'tree -C {} | head -200' "$@" ;;
-    *)  fzf-herdr --preview 'bat -n --color=always {}' "$@" ;;
+    cd) fzf-herdr --fzf-herdr-entrypoint=completion --preview 'tree -C {} | head -200' "$@" ;;
+    *)  fzf-herdr --fzf-herdr-entrypoint=completion --preview 'bat -n --color=always {}' "$@" ;;
   esac
 }
 ```
