@@ -1,4 +1,4 @@
-name: Upstream check
+name: upstream-check
 
 # Every Monday, runs the checks of pr-check.yml with the latest fzf, bats-core, and ShellCheck.
 # Fails when they break fzf-herdr or are newer than the versions pinned in pr-check.yml.

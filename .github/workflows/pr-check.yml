@@ -1,4 +1,4 @@
-name: PR check
+name: pr-check
 
 # Runs the bats tests on macOS and Ubuntu and ShellCheck on every PR and every push to main.
 # The tools are pinned to their latest releases; upstream-check.yml reports newer ones.
