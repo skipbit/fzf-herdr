@@ -50,11 +50,36 @@ $1"
   [ "$output" = "fzf-herdr" ]
 }
 
+@test "picks the entrypoint from the widget of fzf's key binding" {
+  run_zsh 'for WIDGET in fzf-history-widget fzf-file-widget fzf-cd-widget; do __fzfcmd; done'
+
+  [ "${lines[0]}" = "fzf-herdr --fzf-herdr-entrypoint=history" ]
+  [ "${lines[1]}" = "fzf-herdr --fzf-herdr-entrypoint=files" ]
+  [ "${lines[2]}" = "fzf-herdr --fzf-herdr-entrypoint=directories" ]
+}
+
+@test "knows the widgets that fzf binds to its keys" {
+  run_zsh 'bindkey "^T"; bindkey "^R"; bindkey "\ec"' 'unset FZF_CTRL_T_COMMAND FZF_ALT_C_COMMAND'
+
+  [ "${lines[0]}" = '"^T" fzf-file-widget' ]
+  [ "${lines[1]}" = '"^R" fzf-history-widget' ]
+  [ "${lines[2]}" = '"^[c" fzf-cd-widget' ]
+}
+
 @test "runs fzf's completion through fzf-herdr in herdr" {
   run_zsh "printf '%s\n' apple banana | _fzf_comprun ls --filter ban"
 
   [ "$output" = "banana" ]
-  [ -e "$FAKE_HERDR_RECORD/args" ]
+  [ "$(tr '\0' '\n' < "$FAKE_HERDR_RECORD/args" | grep -A1 -x -- --entrypoint | tail -1)" = "completion" ]
+}
+
+@test "uses only entrypoints that the manifest defines, titled after them" {
+  ids=$(grep -o -- '--fzf-herdr-entrypoint=[a-z]*' "$zsh_file" | cut -d= -f2)
+
+  [ "$(wc -l <<< "$ids")" -eq 4 ]
+  for id in $ids; do
+    grep -A1 -x "id = \"$id\"" "$BATS_TEST_DIRNAME/../herdr-plugin.toml" | grep -qx "title = \"fzf: $id\""
+  done
 }
 
 @test "keeps a _fzf_comprun defined before loading" {

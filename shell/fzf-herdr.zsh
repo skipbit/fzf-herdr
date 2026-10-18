@@ -11,14 +11,20 @@
 [[ -n $HERDR_ENV ]] || return 0
 
 # fzf's key bindings run the command that __fzfcmd prints.
+# The entrypoint, picked by the calling widget, sets the title of the popup.
 __fzfcmd() {
-  echo fzf-herdr
+  case $WIDGET in
+    fzf-history-widget) echo fzf-herdr --fzf-herdr-entrypoint=history ;;
+    fzf-file-widget) echo fzf-herdr --fzf-herdr-entrypoint=files ;;
+    fzf-cd-widget) echo fzf-herdr --fzf-herdr-entrypoint=directories ;;
+    *) echo fzf-herdr ;;
+  esac
 }
 
 # fzf's completion runs _fzf_comprun when it is defined. A user's own definition is kept.
 if (( ! $+functions[_fzf_comprun] )); then
   _fzf_comprun() {
     shift
-    fzf-herdr "$@"
+    fzf-herdr --fzf-herdr-entrypoint=completion "$@"
   }
 fi
