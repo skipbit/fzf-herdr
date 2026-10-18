@@ -27,6 +27,6 @@ Run them on macOS and Linux before a release and after changing the popup or the
 ## Fallback to fzf in place
 
 - [ ] In a shell opened in a popup (a `type = "popup"` custom command), CTRL-T runs fzf in place without a warning.
-- [ ] `sleep 3; echo a | fzf-herdr`, then open Settings within 3 seconds: fzf runs in place without a warning.
+- [ ] `sleep 3; echo a | fzf-herdr`, then open Settings or copy mode within 3 seconds: fzf opens without a warning (herdr 0.9.3 shows the popup on top of them), and Esc closes it.
 - [ ] With the plugin disabled (`herdr plugin disable skipbit.fzf-herdr`), CTRL-T prints one warning and runs fzf in place. Enable it again afterwards.
 - [ ] In a shell outside herdr, CTRL-T behaves as it does without fzf-herdr (including fzf-tmux inside tmux).
