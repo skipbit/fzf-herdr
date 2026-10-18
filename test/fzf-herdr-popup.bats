@@ -16,10 +16,11 @@ setup() {
 }
 
 teardown() {
-  local pids
-  pids=$(jobs -p)
-  # shellcheck disable=SC2086
-  [ -z "$pids" ] || { kill $pids && wait; } 2> /dev/null || true
+  local pid
+  for pid in $(jobs -p); do
+    kill "$pid" 2> /dev/null
+  done
+  wait 2> /dev/null || true
 }
 
 # Stands in for fzf-herdr and records SIGUSR1 as the "notified" file.
