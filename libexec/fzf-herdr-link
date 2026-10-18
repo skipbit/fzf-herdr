@@ -1,21 +1,26 @@
 #!/usr/bin/env bash
 # Links this checkout to a fixed place, so that ~/.zshrc can load shell/fzf-herdr.zsh from there.
 # herdr runs this as the build command of "herdr plugin install" and "herdr plugin update".
+# Problems end with status 1, since herdr shows the output of a build only when the build fails.
 
-root=$(cd "$(dirname "$0")/.." && pwd -P)
+fail() {
+  echo "fzf-herdr: $1" >&2
+  exit 1
+}
+
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P) || fail "cannot find the plugin directory"
 link=${XDG_DATA_HOME:-$HOME/.local/share}/fzf-herdr
 
 # herdr 0.9.3 builds in a temporary directory and moves it afterwards, so a link to it would break.
 if [[ $root == */.tmp-install-*/* ]]; then
-  echo "fzf-herdr: herdr 0.9.3 cannot link the installed plugin; install it from a clone instead"
-  exit 0
+  fail "herdr 0.9.3 cannot link the installed plugin; install it from a clone instead"
 fi
 
 if [[ -e $link && ! -L $link ]]; then
-  echo "fzf-herdr: $link is not a link, so it is left as it is"
-  exit 0
+  fail "$link is not a link; remove it, or keep using it with \"herdr plugin link\""
 fi
 
-mkdir -p "$(dirname "$link")"
-ln -sfn "$root" "$link"
+if ! mkdir -p "$(dirname -- "$link")" || ! ln -sfn "$root" "$link"; then
+  fail "cannot link $link to $root"
+fi
 echo "fzf-herdr: linked $link -> $root"
