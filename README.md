@@ -12,7 +12,7 @@ fzf-herdr does for Herdr what `fzf-tmux` does for tmux: it shows the fzf finder 
 - bash, to run the scripts (the one that ships with macOS works)
 - macOS or Linux
 
-Tested with herdr 0.9.3 and zsh 5.9 on macOS (fzf 0.74.4, bash 3.2) and Ubuntu 24.04 (fzf 0.56.0, bash 5.2).
+Tested with zsh 5.9 on macOS (herdr 0.9.3 and 0.9.5, fzf 0.74.4, bash 3.2) and Ubuntu 24.04 (herdr 0.9.3, fzf 0.56.0, bash 5.2).
 
 ## Installation
 
