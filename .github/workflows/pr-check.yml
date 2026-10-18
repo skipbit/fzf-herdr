@@ -1,0 +1,52 @@
+name: PR check
+
+# Runs the bats tests on macOS and Ubuntu and ShellCheck on every PR and every push to main.
+# The tools are pinned to their latest releases; upstream-check.yml reports newer ones.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pr-check-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FZF_VERSION: 0.74.5
+  BATS_VERSION: 1.14.0
+  SHELLCHECK_VERSION: 0.11.0
+
+jobs:
+  bats:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install zsh
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y zsh
+      - run: .github/scripts/install-tools.sh fzf "$FZF_VERSION"
+      - run: .github/scripts/install-tools.sh bats "$BATS_VERSION"
+      - name: Show versions
+        run: |
+          bash --version | head -1
+          zsh --version
+          fzf --version
+          bats --version
+      - run: bats test/
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: .github/scripts/install-tools.sh shellcheck "$SHELLCHECK_VERSION"
+      - run: shellcheck --version
+      - run: shellcheck bin/fzf-herdr libexec/fzf-herdr-popup test/fakes/* .github/scripts/*.sh
+      - run: shellcheck -s bash test/*.bats

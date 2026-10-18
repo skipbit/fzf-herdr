@@ -80,7 +80,7 @@ Run the tests with [bats-core](https://github.com/bats-core/bats-core) and check
 
 ```sh
 bats test/
-shellcheck bin/fzf-herdr libexec/fzf-herdr-popup test/fakes/*
+shellcheck bin/fzf-herdr libexec/fzf-herdr-popup test/fakes/* .github/scripts/*.sh
 shellcheck -s bash test/*.bats
 ```
 

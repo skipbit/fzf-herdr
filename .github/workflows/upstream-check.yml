@@ -1,0 +1,81 @@
+name: Upstream check
+
+# Every Monday, runs the checks of pr-check.yml with the latest fzf, bats-core, and ShellCheck.
+# Fails when they break fzf-herdr or are newer than the versions pinned in pr-check.yml.
+on:
+  schedule:
+    - cron: "0 0 * * 1" # Mondays 09:00 JST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  latest:
+    runs-on: ubuntu-latest
+    outputs:
+      fzf: ${{ steps.versions.outputs.fzf }}
+      bats: ${{ steps.versions.outputs.bats }}
+      shellcheck: ${{ steps.versions.outputs.shellcheck }}
+    steps:
+      - id: versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest() { gh release view --repo "$1" --json tagName --jq '.tagName | ltrimstr("v")'; }
+          {
+            echo "fzf=$(latest junegunn/fzf)"
+            echo "bats=$(latest bats-core/bats-core)"
+            echo "shellcheck=$(latest koalaman/shellcheck)"
+          } | tee -a "$GITHUB_OUTPUT"
+
+  bats:
+    needs: latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      FZF_VERSION: ${{ needs.latest.outputs.fzf }}
+      BATS_VERSION: ${{ needs.latest.outputs.bats }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install zsh
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y zsh
+      - run: .github/scripts/install-tools.sh fzf "$FZF_VERSION"
+      - run: .github/scripts/install-tools.sh bats "$BATS_VERSION"
+      - run: bats test/
+
+  shellcheck:
+    needs: latest
+    runs-on: ubuntu-latest
+    env:
+      SHELLCHECK_VERSION: ${{ needs.latest.outputs.shellcheck }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: .github/scripts/install-tools.sh shellcheck "$SHELLCHECK_VERSION"
+      - run: shellcheck bin/fzf-herdr libexec/fzf-herdr-popup test/fakes/* .github/scripts/*.sh
+      - run: shellcheck -s bash test/*.bats
+
+  pinned:
+    needs: latest
+    runs-on: ubuntu-latest
+    env:
+      FZF_VERSION: ${{ needs.latest.outputs.fzf }}
+      BATS_VERSION: ${{ needs.latest.outputs.bats }}
+      SHELLCHECK_VERSION: ${{ needs.latest.outputs.shellcheck }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compare with the versions pinned in pr-check.yml
+        run: |
+          status=0
+          for name in FZF_VERSION BATS_VERSION SHELLCHECK_VERSION; do
+            pinned=$(sed -n "s/^  $name: //p" .github/workflows/pr-check.yml)
+            if [ "$pinned" != "${!name}" ]; then
+              echo "::error::$name in pr-check.yml is $pinned, but the latest release is ${!name}"
+              status=1
+            fi
+          done
+          exit $status
