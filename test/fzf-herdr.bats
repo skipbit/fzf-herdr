@@ -89,9 +89,9 @@ start_with_slow_fzf() {
   read -r popup_pid < "$session_dir/popup_pid"
 }
 
-# Runs fzf-herdr on piped candidates and keeps its output and error output.
+# Runs fzf-herdr with the arguments on piped candidates and keeps its output and error output.
 run_filter() {
-  out=$(printf '%s\n' apple banana 'big banana' | "$fzf_herdr" --filter ban 2> "$BATS_TEST_TMPDIR/stderr")
+  out=$(printf '%s\n' apple banana 'big banana' | "$fzf_herdr" "$@" --filter ban 2> "$BATS_TEST_TMPDIR/stderr")
   err=$(cat "$BATS_TEST_TMPDIR/stderr")
 }
 
@@ -139,6 +139,24 @@ run_filter() {
   herdr_received --plugin skipbit.fzf-herdr
   herdr_received --entrypoint fzf
   herdr_received --cwd "$BATS_TEST_TMPDIR"
+}
+
+@test "opens the pane given by the first argument and passes the rest to fzf" {
+  use_fake_fzf
+
+  "$fzf_herdr" --fzf-herdr-entrypoint=history --query a < /dev/null
+
+  herdr_received --entrypoint history
+  cmp <(printf '%s\0' --query a --no-height --border=none --margin=0,1 --bind=ctrl-z:ignore) "$FAKE_FZF_RECORD/args"
+}
+
+@test "takes the entrypoint only from the first argument" {
+  use_fake_fzf
+
+  "$fzf_herdr" --query a --fzf-herdr-entrypoint=history < /dev/null
+
+  herdr_received --entrypoint fzf
+  cmp <(printf '%s\0' --query a --fzf-herdr-entrypoint=history --no-height --border=none --margin=0,1 --bind=ctrl-z:ignore) "$FAKE_FZF_RECORD/args"
 }
 
 @test "passes the fzf variables and PATH even when empty" {
@@ -198,6 +216,13 @@ run_filter() {
   [ ! -e "$FAKE_HERDR_RECORD/args" ]
 }
 
+@test "drops the entrypoint when running fzf in place outside herdr" {
+  HERDR_ENV='' run_filter --fzf-herdr-entrypoint=history
+
+  [ "$out" = $'banana\nbig banana' ]
+  [ -z "$err" ]
+}
+
 @test "runs fzf in place without a warning while herdr is busy" {
   FAKE_HERDR_ERROR=ui_busy run_filter
 
@@ -210,6 +235,14 @@ run_filter() {
 
   [ "$out" = $'banana\nbig banana' ]
   [ "$err" = "fzf-herdr: cannot open the herdr popup (plugin_not_found); running fzf in place" ]
+}
+
+@test "warns and runs fzf in place when the entrypoint is not found" {
+  FAKE_HERDR_ERROR=plugin_pane_not_found run_filter --fzf-herdr-entrypoint=missing
+
+  herdr_received --entrypoint missing
+  [ "$out" = $'banana\nbig banana' ]
+  [ "$err" = "fzf-herdr: cannot open the herdr popup (plugin_pane_not_found); running fzf in place" ]
 }
 
 @test "warns and runs fzf in place when herdr cannot be run" {

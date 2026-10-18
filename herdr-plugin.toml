@@ -15,3 +15,35 @@ placement = "popup"
 width = "50%"
 height = "50%"
 command = ["libexec/fzf-herdr-popup"]
+
+[[panes]]
+id = "history"
+title = "fzf: history"
+placement = "popup"
+width = "50%"
+height = "50%"
+command = ["libexec/fzf-herdr-popup"]
+
+[[panes]]
+id = "files"
+title = "fzf: files"
+placement = "popup"
+width = "50%"
+height = "50%"
+command = ["libexec/fzf-herdr-popup"]
+
+[[panes]]
+id = "directories"
+title = "fzf: directories"
+placement = "popup"
+width = "50%"
+height = "50%"
+command = ["libexec/fzf-herdr-popup"]
+
+[[panes]]
+id = "completion"
+title = "fzf: completion"
+placement = "popup"
+width = "50%"
+height = "50%"
+command = ["libexec/fzf-herdr-popup"]
