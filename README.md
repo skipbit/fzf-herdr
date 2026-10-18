@@ -16,19 +16,31 @@ Tested with herdr 0.9.3 and zsh 5.9 on macOS (fzf 0.74.4, bash 3.2) and Ubuntu 2
 
 ## Installation
 
-Clone this repository anywhere you like (e.g. `~/.local/share/fzf-herdr` or `~/.fzf-herdr`) and register it with herdr.
-The commands below use `~/.local/share/fzf-herdr`.
+Install the plugin with herdr:
 
 ```sh
-git clone https://github.com/skipbit/fzf-herdr.git ~/.local/share/fzf-herdr
-herdr plugin link ~/.local/share/fzf-herdr
+herdr plugin install skipbit/fzf-herdr
 ```
 
+The install runs `libexec/fzf-herdr-link`, which links the plugin to `~/.local/share/fzf-herdr` (`$XDG_DATA_HOME/fzf-herdr` if set).
 Then load it in `~/.zshrc`, after fzf's own shell integration:
 
 ```zsh
 source <(fzf --zsh)
 source ~/.local/share/fzf-herdr/shell/fzf-herdr.zsh
+```
+
+To update, run `herdr plugin update skipbit.fzf-herdr` (on herdr 0.9.3, run the install command again).
+To uninstall, run `herdr plugin uninstall skipbit.fzf-herdr`, remove the line from `~/.zshrc`, and delete the link `~/.local/share/fzf-herdr`.
+
+### From a clone
+
+You can also clone this repository anywhere you like and register it with herdr.
+Cloning it to `~/.local/share/fzf-herdr` keeps the line in `~/.zshrc` above as it is.
+
+```sh
+git clone https://github.com/skipbit/fzf-herdr.git ~/.local/share/fzf-herdr
+herdr plugin link ~/.local/share/fzf-herdr
 ```
 
 To update, run `git -C ~/.local/share/fzf-herdr pull`.
@@ -80,7 +92,7 @@ Run the tests with [bats-core](https://github.com/bats-core/bats-core) and check
 
 ```sh
 bats test/
-shellcheck bin/fzf-herdr libexec/fzf-herdr-popup test/fakes/* .github/scripts/*.sh
+shellcheck bin/fzf-herdr libexec/* test/fakes/* .github/scripts/*.sh
 shellcheck -s bash test/*.bats
 ```
 

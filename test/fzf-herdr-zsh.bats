@@ -30,6 +30,14 @@ $1"
   [ "$output" = "$bin_dir/fzf-herdr" ]
 }
 
+@test "keeps a linked location on PATH" {
+  ln -s "$(cd "$BATS_TEST_DIRNAME/.." && pwd)" "$BATS_TEST_TMPDIR/linked"
+
+  run zsh -f -c "source '$BATS_TEST_TMPDIR/linked/shell/fzf-herdr.zsh'; whence -p fzf-herdr"
+
+  [ "$output" = "$BATS_TEST_TMPDIR/linked/bin/fzf-herdr" ]
+}
+
 @test "adds bin to PATH only once" {
   run_zsh "source '$zsh_file'; m=(\${(M)path:#$bin_dir}); print \${#m}"
 

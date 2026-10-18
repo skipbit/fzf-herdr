@@ -56,7 +56,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: .github/scripts/install-tools.sh shellcheck "$SHELLCHECK_VERSION"
-      - run: shellcheck bin/fzf-herdr libexec/fzf-herdr-popup test/fakes/* .github/scripts/*.sh
+      - run: shellcheck bin/fzf-herdr libexec/* test/fakes/* .github/scripts/*.sh
       - run: shellcheck -s bash test/*.bats
 
   pinned:

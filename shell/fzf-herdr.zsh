@@ -2,8 +2,9 @@
 # Source this file after fzf's own shell integration (e.g. `source <(fzf --zsh)`).
 
 # Puts bin/ of this repository on PATH so that fzf-herdr can be called by name.
+# The path keeps links, so that a link updated by "herdr plugin update" also updates running shells.
 () {
-  local bin=${${(%):-%x}:A:h:h}/bin
+  local bin=${${(%):-%x}:a:h:h}/bin
   (( ${path[(Ie)$bin]} )) || path=("$bin" $path)
 }
 

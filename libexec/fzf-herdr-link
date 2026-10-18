@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Links this checkout to a fixed place, so that ~/.zshrc can load shell/fzf-herdr.zsh from there.
+# herdr runs this as the build command of "herdr plugin install" and "herdr plugin update".
+
+root=$(cd "$(dirname "$0")/.." && pwd -P)
+link=${XDG_DATA_HOME:-$HOME/.local/share}/fzf-herdr
+
+if [[ -e $link && ! -L $link ]]; then
+  echo "fzf-herdr: $link is not a link, so it is left as it is"
+  exit 0
+fi
+
+mkdir -p "$(dirname "$link")"
+ln -sfn "$root" "$link"
+echo "fzf-herdr: linked $link -> $root"
