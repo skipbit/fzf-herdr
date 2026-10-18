@@ -40,6 +40,18 @@ setup() {
   [ -d "$BATS_TEST_TMPDIR/old" ]
 }
 
+@test "does not link a checkout in the temporary directory of herdr 0.9.3" {
+  checkout="$BATS_TEST_TMPDIR/plugins/.tmp-install-1-2/checkout"
+  mkdir -p "$checkout/libexec"
+  cp "$link_script" "$checkout/libexec/"
+
+  run "$checkout/libexec/fzf-herdr-link"
+
+  [ "$status" -eq 0 ]
+  [ ! -e "$HOME/.local/share/fzf-herdr" ]
+  [[ $output == *"install it from a clone"* ]]
+}
+
 @test "leaves a directory in place of the link alone" {
   mkdir -p "$HOME/.local/share/fzf-herdr"
   touch "$HOME/.local/share/fzf-herdr/clone"

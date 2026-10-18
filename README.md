@@ -23,6 +23,7 @@ herdr plugin install skipbit/fzf-herdr
 ```
 
 The install runs `libexec/fzf-herdr-link`, which links the plugin to `~/.local/share/fzf-herdr` (`$XDG_DATA_HOME/fzf-herdr` if set).
+herdr 0.9.3 cannot create this link on install, so install from a clone instead (see below).
 Then load it in `~/.zshrc`, after fzf's own shell integration:
 
 ```zsh
@@ -30,7 +31,7 @@ source <(fzf --zsh)
 source ~/.local/share/fzf-herdr/shell/fzf-herdr.zsh
 ```
 
-To update, run `herdr plugin update skipbit.fzf-herdr` (on herdr 0.9.3, run the install command again).
+To update, run `herdr plugin update skipbit.fzf-herdr`.
 To uninstall, run `herdr plugin uninstall skipbit.fzf-herdr`, remove the line from `~/.zshrc`, and delete the link `~/.local/share/fzf-herdr`.
 
 ### From a clone

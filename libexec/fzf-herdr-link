@@ -5,6 +5,12 @@
 root=$(cd "$(dirname "$0")/.." && pwd -P)
 link=${XDG_DATA_HOME:-$HOME/.local/share}/fzf-herdr
 
+# herdr 0.9.3 builds in a temporary directory and moves it afterwards, so a link to it would break.
+if [[ $root == */.tmp-install-*/* ]]; then
+  echo "fzf-herdr: herdr 0.9.3 cannot link the installed plugin; install it from a clone instead"
+  exit 0
+fi
+
 if [[ -e $link && ! -L $link ]]; then
   echo "fzf-herdr: $link is not a link, so it is left as it is"
   exit 0
