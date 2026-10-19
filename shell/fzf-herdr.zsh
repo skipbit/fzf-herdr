@@ -13,7 +13,7 @@
 # fzf's key bindings run the command that __fzfcmd prints.
 # The entrypoint, picked by the calling widget, sets the title of the popup.
 __fzfcmd() {
-  case $WIDGET in
+  case ${WIDGET-} in
     fzf-history-widget) echo env FZF_HERDR_ENTRYPOINT=history fzf-herdr ;;
     fzf-file-widget) echo env FZF_HERDR_ENTRYPOINT=files fzf-herdr ;;
     fzf-cd-widget) echo env FZF_HERDR_ENTRYPOINT=directories fzf-herdr ;;

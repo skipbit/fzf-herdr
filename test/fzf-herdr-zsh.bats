@@ -50,6 +50,12 @@ $1"
   [ "$output" = "fzf-herdr" ]
 }
 
+@test "prints fzf-herdr outside widgets with nounset" {
+  run_zsh 'setopt nounset; __fzfcmd'
+
+  [ "$output" = "fzf-herdr" ]
+}
+
 @test "opens the pane picked by the widget of fzf's key binding" {
   local pair
   for pair in fzf-history-widget:history fzf-file-widget:files fzf-cd-widget:directories; do
