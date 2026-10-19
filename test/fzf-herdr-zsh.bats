@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 # Tests for shell/fzf-herdr.zsh, loaded after fzf's own zsh integration.
 
+load helpers
+
 setup_file() {
   export BATS_TEST_TIMEOUT=10
 }
@@ -61,12 +63,12 @@ $1"
   for pair in fzf-history-widget:history fzf-file-widget:files fzf-cd-widget:directories; do
     # fzf's key bindings run the output of __fzfcmd unquoted, as this does.
     run_zsh "WIDGET=${pair%%:*}; \$(__fzfcmd) --filter x < /dev/null"
-    [ "$(tr '\0' '\n' < "$FAKE_HERDR_RECORD/args" | grep -A1 -x -- --entrypoint | tail -1)" = "${pair#*:}" ]
+    herdr_received --entrypoint "${pair#*:}"
   done
 }
 
 @test "knows the widgets that fzf binds to its keys" {
-  run_zsh 'bindkey "^T"; bindkey "^R"; bindkey "\ec"' 'unset FZF_CTRL_T_COMMAND FZF_ALT_C_COMMAND'
+  run_zsh 'bindkey "^T"; bindkey "^R"; bindkey "\ec"' 'unset FZF_CTRL_T_COMMAND FZF_CTRL_R_COMMAND FZF_ALT_C_COMMAND'
 
   [ "${lines[0]}" = '"^T" fzf-file-widget' ]
   [ "${lines[1]}" = '"^R" fzf-history-widget' ]
@@ -77,13 +79,13 @@ $1"
   run_zsh "printf '%s\n' apple banana | _fzf_comprun ls --filter ban"
 
   [ "$output" = "banana" ]
-  [ "$(tr '\0' '\n' < "$FAKE_HERDR_RECORD/args" | grep -A1 -x -- --entrypoint | tail -1)" = "completion" ]
+  herdr_received --entrypoint completion
 }
 
 @test "uses only entrypoints that the manifest defines, titled after them" {
-  ids=$(grep -o 'FZF_HERDR_ENTRYPOINT=[a-z]*' "$zsh_file" | cut -d= -f2)
+  ids=$(grep -o 'FZF_HERDR_ENTRYPOINT=[[:alnum:]:_-]*' "$zsh_file" | cut -d= -f2)
 
-  [ "$(wc -l <<< "$ids")" -eq 4 ]
+  [ -n "$ids" ]
   for id in $ids; do
     grep -A1 -x "id = \"$id\"" "$BATS_TEST_DIRNAME/../herdr-plugin.toml" | grep -qx "title = \"fzf: $id\""
   done

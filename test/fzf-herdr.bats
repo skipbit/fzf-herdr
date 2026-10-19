@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 # Tests for bin/fzf-herdr, with the fake herdr running the popup script in place of a real popup.
 
+load helpers
+
 setup_file() {
   export BATS_TEST_TIMEOUT=10
 }
@@ -28,44 +30,6 @@ use_fake_fzf() {
   export PATH="$BATS_TEST_DIRNAME/fakes:$PATH"
   export FAKE_FZF_RECORD="$BATS_TEST_TMPDIR/fzf"
   mkdir "$FAKE_FZF_RECORD"
-}
-
-# Puts every value that the fake herdr received for the option into the values array.
-herdr_option_values() {
-  local args=() arg i
-  while IFS= read -r -d '' arg; do
-    args+=("$arg")
-  done < "$FAKE_HERDR_RECORD/args"
-  values=()
-  for ((i = 0; i + 1 < ${#args[@]}; i++)); do
-    if [[ ${args[i]} == "$1" ]]; then
-      values+=("${args[i + 1]}")
-    fi
-  done
-}
-
-# Succeeds when the fake herdr received the option with the value.
-herdr_received() {
-  local value
-  herdr_option_values "$1"
-  for value in "${values[@]}"; do
-    [[ $value == "$2" ]] && return 0
-  done
-  return 1
-}
-
-# Prints the value of the environment variable that the fake herdr received with --env.
-# Fails when the variable was not passed.
-herdr_env_value() {
-  local value
-  herdr_option_values --env
-  for value in "${values[@]}"; do
-    if [[ $value == "$1="* ]]; then
-      echo "${value#"$1="}"
-      return 0
-    fi
-  done
-  return 1
 }
 
 wait_for_file() {
@@ -187,10 +151,8 @@ run_filter() {
   use_fake_fzf
 
   "$fzf_herdr" < /dev/null
-  herdr_option_values --width
-  [ "${#values[@]}" -eq 0 ]
-  herdr_option_values --height
-  [ "${#values[@]}" -eq 0 ]
+  [ "$(herdr_option_count --width)" -eq 0 ]
+  [ "$(herdr_option_count --height)" -eq 0 ]
 
   FZF_HERDR_WIDTH=80% FZF_HERDR_HEIGHT=30 "$fzf_herdr" < /dev/null
   herdr_received --width 80%

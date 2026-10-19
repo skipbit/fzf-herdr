@@ -102,7 +102,7 @@ Run the tests with [bats-core](https://github.com/bats-core/bats-core) and check
 ```sh
 bats test/
 shellcheck bin/fzf-herdr libexec/* test/fakes/* .github/scripts/*.sh
-shellcheck -s bash test/*.bats
+shellcheck -s bash test/*.bats test/helpers.bash
 ```
 
 Checks that need a real Herdr popup and key input are listed in [test/manual.md](test/manual.md).
