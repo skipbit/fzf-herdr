@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 # Tests for bin/fzf-herdr, with the fake herdr running the popup script in place of a real popup.
 
+load helpers
+
 setup_file() {
   export BATS_TEST_TIMEOUT=10
 }
@@ -13,7 +15,7 @@ setup() {
   export TMPDIR="$BATS_TEST_TMPDIR"
   export HERDR_ENV=1
   unset FAKE_HERDR_ERROR FZF_DEFAULT_COMMAND FZF_DEFAULT_OPTS FZF_DEFAULT_OPTS_FILE
-  unset RUNEWIDTH_EASTASIAN BAT_THEME FZF_HERDR_WIDTH FZF_HERDR_HEIGHT
+  unset RUNEWIDTH_EASTASIAN BAT_THEME FZF_HERDR_WIDTH FZF_HERDR_HEIGHT FZF_HERDR_ENTRYPOINT
 }
 
 teardown() {
@@ -28,44 +30,6 @@ use_fake_fzf() {
   export PATH="$BATS_TEST_DIRNAME/fakes:$PATH"
   export FAKE_FZF_RECORD="$BATS_TEST_TMPDIR/fzf"
   mkdir "$FAKE_FZF_RECORD"
-}
-
-# Puts every value that the fake herdr received for the option into the values array.
-herdr_option_values() {
-  local args=() arg i
-  while IFS= read -r -d '' arg; do
-    args+=("$arg")
-  done < "$FAKE_HERDR_RECORD/args"
-  values=()
-  for ((i = 0; i + 1 < ${#args[@]}; i++)); do
-    if [[ ${args[i]} == "$1" ]]; then
-      values+=("${args[i + 1]}")
-    fi
-  done
-}
-
-# Succeeds when the fake herdr received the option with the value.
-herdr_received() {
-  local value
-  herdr_option_values "$1"
-  for value in "${values[@]}"; do
-    [[ $value == "$2" ]] && return 0
-  done
-  return 1
-}
-
-# Prints the value of the environment variable that the fake herdr received with --env.
-# Fails when the variable was not passed.
-herdr_env_value() {
-  local value
-  herdr_option_values --env
-  for value in "${values[@]}"; do
-    if [[ $value == "$1="* ]]; then
-      echo "${value#"$1="}"
-      return 0
-    fi
-  done
-  return 1
 }
 
 wait_for_file() {
@@ -141,6 +105,22 @@ run_filter() {
   herdr_received --cwd "$BATS_TEST_TMPDIR"
 }
 
+@test "opens the pane named by FZF_HERDR_ENTRYPOINT" {
+  use_fake_fzf
+
+  FZF_HERDR_ENTRYPOINT=history "$fzf_herdr" < /dev/null
+
+  herdr_received --entrypoint history
+}
+
+@test "opens the fzf pane when FZF_HERDR_ENTRYPOINT is empty" {
+  use_fake_fzf
+
+  FZF_HERDR_ENTRYPOINT='' "$fzf_herdr" < /dev/null
+
+  herdr_received --entrypoint fzf
+}
+
 @test "passes the fzf variables and PATH even when empty" {
   use_fake_fzf
   export FZF_DEFAULT_OPTS=$'--height 40%\n--multi' FZF_DEFAULT_OPTS_FILE=''
@@ -171,10 +151,8 @@ run_filter() {
   use_fake_fzf
 
   "$fzf_herdr" < /dev/null
-  herdr_option_values --width
-  [ "${#values[@]}" -eq 0 ]
-  herdr_option_values --height
-  [ "${#values[@]}" -eq 0 ]
+  [ "$(herdr_option_count --width)" -eq 0 ]
+  [ "$(herdr_option_count --height)" -eq 0 ]
 
   FZF_HERDR_WIDTH=80% FZF_HERDR_HEIGHT=30 "$fzf_herdr" < /dev/null
   herdr_received --width 80%
@@ -210,6 +188,14 @@ run_filter() {
 
   [ "$out" = $'banana\nbig banana' ]
   [ "$err" = "fzf-herdr: cannot open the herdr popup (plugin_not_found); running fzf in place" ]
+}
+
+@test "warns and runs fzf in place when the entrypoint is not found" {
+  FAKE_HERDR_ERROR=plugin_pane_not_found FZF_HERDR_ENTRYPOINT=missing run_filter
+
+  herdr_received --entrypoint missing
+  [ "$out" = $'banana\nbig banana' ]
+  [ "$err" = "fzf-herdr: cannot open the herdr popup (plugin_pane_not_found); running fzf in place" ]
 }
 
 @test "warns and runs fzf in place when herdr cannot be run" {

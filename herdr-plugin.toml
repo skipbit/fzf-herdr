@@ -1,6 +1,6 @@
 id = "skipbit.fzf-herdr"
 name = "fzf-herdr"
-version = "0.1.0"
+version = "0.1.1"
 min_herdr_version = "0.9.3"
 description = "Open fzf in a Herdr popup for shell key bindings and fuzzy completion."
 platforms = ["linux", "macos"]
@@ -11,6 +11,38 @@ command = ["libexec/fzf-herdr-link"]
 [[panes]]
 id = "fzf"
 title = "fzf"
+placement = "popup"
+width = "50%"
+height = "50%"
+command = ["libexec/fzf-herdr-popup"]
+
+[[panes]]
+id = "history"
+title = "fzf: history"
+placement = "popup"
+width = "50%"
+height = "50%"
+command = ["libexec/fzf-herdr-popup"]
+
+[[panes]]
+id = "files"
+title = "fzf: files"
+placement = "popup"
+width = "50%"
+height = "50%"
+command = ["libexec/fzf-herdr-popup"]
+
+[[panes]]
+id = "directories"
+title = "fzf: directories"
+placement = "popup"
+width = "50%"
+height = "50%"
+command = ["libexec/fzf-herdr-popup"]
+
+[[panes]]
+id = "completion"
+title = "fzf: completion"
 placement = "popup"
 width = "50%"
 height = "50%"

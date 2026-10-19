@@ -50,6 +50,7 @@ To uninstall, run `herdr plugin unlink skipbit.fzf-herdr`, remove the line from 
 ## Usage
 
 Inside Herdr, CTRL-T, CTRL-R, ALT-C, and `**<TAB>` open fzf in a popup. Select and cancel as you do in plain fzf.
+The popup is titled after what you are searching: `fzf: files` (CTRL-T), `fzf: history` (CTRL-R), `fzf: directories` (ALT-C), or `fzf: completion` (`**<TAB>`).
 
 `fzf-herdr` takes the same arguments as fzf, so you can also use it directly:
 
@@ -57,8 +58,14 @@ Inside Herdr, CTRL-T, CTRL-R, ALT-C, and `**<TAB>` open fzf in a popup. Select a
 git branch | fzf-herdr --multi
 ```
 
+This popup is titled `fzf`. To use one of the titles above, set `FZF_HERDR_ENTRYPOINT` to `files`, `history`, `directories`, or `completion`:
+
+```sh
+git ls-files | FZF_HERDR_ENTRYPOINT=files fzf-herdr --multi
+```
+
 Outside Herdr, or while another popup is open, fzf-herdr runs fzf in place.
-When the popup cannot be opened for another reason, such as the plugin being disabled, it prints a one-line warning and runs fzf in place.
+When the popup cannot be opened for another reason, such as the plugin being disabled or an unknown `FZF_HERDR_ENTRYPOINT`, it prints a one-line warning and runs fzf in place.
 
 In the popup, Herdr draws the frame, so fzf's `--height`, `--border`, and `--margin` are replaced with a narrow side margin.
 The popup receives `FZF_DEFAULT_COMMAND`, `FZF_DEFAULT_OPTS`, `FZF_DEFAULT_OPTS_FILE`, `PATH`, `RUNEWIDTH_EASTASIAN`, and `BAT_THEME` from your shell; other environment variables come from the Herdr server.
@@ -66,7 +73,7 @@ The popup receives `FZF_DEFAULT_COMMAND`, `FZF_DEFAULT_OPTS`, `FZF_DEFAULT_OPTS_
 ### Custom `_fzf_comprun`
 
 If you define [`_fzf_comprun`](https://github.com/junegunn/fzf#customizing-fzf-options-for-completion) yourself, fzf-herdr keeps it.
-Call `fzf-herdr` instead of `fzf` in it to use the popup:
+Call `fzf-herdr` instead of `fzf` in it to use the popup, and set `FZF_HERDR_ENTRYPOINT=completion` to title it `fzf: completion`:
 
 ```zsh
 _fzf_comprun() {
@@ -74,18 +81,19 @@ _fzf_comprun() {
   shift
 
   case "$command" in
-    cd) fzf-herdr --preview 'tree -C {} | head -200' "$@" ;;
-    *)  fzf-herdr --preview 'bat -n --color=always {}' "$@" ;;
+    cd) FZF_HERDR_ENTRYPOINT=completion fzf-herdr --preview 'tree -C {} | head -200' "$@" ;;
+    *)  FZF_HERDR_ENTRYPOINT=completion fzf-herdr --preview 'bat -n --color=always {}' "$@" ;;
   esac
 }
 ```
 
 ## Configuration
 
-| Variable           | Description                                      | Default |
-| ------------------ | ------------------------------------------------ | ------- |
-| `FZF_HERDR_WIDTH`  | Popup width, in cells or as a percentage (`80%`)  | `50%`   |
-| `FZF_HERDR_HEIGHT` | Popup height, in cells or as a percentage (`80%`) | `50%`   |
+| Variable               | Description                                                                          | Default |
+| ---------------------- | ------------------------------------------------------------------------------------ | ------- |
+| `FZF_HERDR_WIDTH`      | Popup width, in cells or as a percentage (`80%`)                                     | `50%`   |
+| `FZF_HERDR_HEIGHT`     | Popup height, in cells or as a percentage (`80%`)                                    | `50%`   |
+| `FZF_HERDR_ENTRYPOINT` | Popup to open: `files`, `history`, `directories`, or `completion` for the titles above | `fzf`   |
 
 ## Development
 
@@ -94,7 +102,7 @@ Run the tests with [bats-core](https://github.com/bats-core/bats-core) and check
 ```sh
 bats test/
 shellcheck bin/fzf-herdr libexec/* test/fakes/* .github/scripts/*.sh
-shellcheck -s bash test/*.bats
+shellcheck -s bash test/*.bats test/helpers.bash
 ```
 
 Checks that need a real Herdr popup and key input are listed in [test/manual.md](test/manual.md).
