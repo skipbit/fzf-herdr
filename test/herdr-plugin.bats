@@ -20,3 +20,14 @@ pane_settings() {
   [ "${#lines[@]}" -eq "$(grep -cx '\[\[panes\]\]' "$manifest")" ]
   [ "$(sort -u <<< "$output" | wc -l)" -eq 1 ]
 }
+
+@test "defines the panes that each shell integration opens, titled after them" {
+  local file ids id
+  for file in "$BATS_TEST_DIRNAME"/../shell/*; do
+    ids=$(grep -o 'FZF_HERDR_ENTRYPOINT=[[:alnum:]:_-]*' "$file" | cut -d= -f2)
+    [ -n "$ids" ]
+    for id in $ids; do
+      grep -A1 -x "id = \"$id\"" "$manifest" | grep -qx "title = \"fzf: $id\""
+    done
+  done
+}
