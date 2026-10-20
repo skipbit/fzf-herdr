@@ -16,6 +16,8 @@ setup() {
   mkdir "$FAKE_HERDR_RECORD"
   export TMPDIR="$BATS_TEST_TMPDIR"
   export HERDR_ENV=1
+  # fzf's own __fzfcmd can pick fzf-tmux in tmux.
+  unset TMUX_PANE
 }
 
 # Runs the zsh code in an interactive zsh without rc files, after loading fzf and fzf-herdr.

@@ -19,7 +19,10 @@ setup() {
   export HERDR_ENV=1
   # An interactive bash reads and trims the history file.
   export HISTFILE="$BATS_TEST_TMPDIR/history"
-  unset FZF_CTRL_T_COMMAND FZF_CTRL_R_COMMAND FZF_ALT_C_COMMAND
+  # bash reads ~/.inputrc even with --norc, and its vi mode binds the keys to other macros.
+  export INPUTRC=/dev/null
+  # fzf's own __fzfcmd can pick fzf-tmux in tmux.
+  unset TMUX_PANE FZF_CTRL_T_COMMAND FZF_CTRL_R_COMMAND FZF_ALT_C_COMMAND
 }
 
 # Runs the bash code in an interactive bash without rc files, after loading fzf and fzf-herdr.
@@ -31,12 +34,16 @@ source '$bash_file'
 $1"
 }
 
-# Prints the command that fzf binds to the key: a bind -x command (bash 4 and later),
-# or the one in backquotes of a macro.
+# Prints the command that fzf binds to the key in the bindings read from the standard input:
+# a bind -x command, or the one in backquotes of a macro.
+# bash 5.3 lists bind -x bindings without the colon after the key.
 key_command() {
-  local binding
-  binding=$(bash --norc --noprofile -i -c 'eval "$(fzf --bash)"; bind -X; bind -s' 2> /dev/null | grep -F "\"$1\": ")
-  binding=${binding#*': "'}
+  local line binding=
+  while IFS= read -r line; do
+    [[ $line == "\"$1\""[:\ ]* ]] && binding=${line#"\"$1\""}
+  done
+  binding=${binding#:}
+  binding=${binding#' "'}
   binding=${binding%'"'}
   if [[ $binding == *'`'* ]]; then
     binding=${binding#*'`'}
@@ -55,6 +62,15 @@ key_command() {
   ln -s "$(cd "$BATS_TEST_DIRNAME/.." && pwd)" "$BATS_TEST_TMPDIR/linked"
 
   run bash --norc --noprofile -c "source '$BATS_TEST_TMPDIR/linked/shell/fzf-herdr.bash'; type -P fzf-herdr"
+
+  [ "$output" = "$BATS_TEST_TMPDIR/linked/bin/fzf-herdr" ]
+}
+
+@test "keeps a linked location on PATH regardless of cd's replacement and options" {
+  ln -s "$(cd "$BATS_TEST_DIRNAME/.." && pwd)" "$BATS_TEST_TMPDIR/linked"
+
+  run bash --norc --noprofile -c "set -o physical; cd() { builtin cd \"\$@\" && echo moved; }
+source '$BATS_TEST_TMPDIR/linked/shell/fzf-herdr.bash'; type -P fzf-herdr"
 
   [ "$output" = "$BATS_TEST_TMPDIR/linked/bin/fzf-herdr" ]
 }
@@ -78,11 +94,13 @@ key_command() {
 }
 
 @test "opens the pane picked by each of fzf's keys" {
-  local pair command
+  local bindings pair command
+  # bash 4.3 and later list bind -x bindings with bind -X, and bash 3.2 binds the keys to macros.
+  bindings=$(bash --norc --noprofile -i -c 'eval "$(fzf --bash)"; bind -X; bind -s' 2> /dev/null)
   # fzf filters its empty input in place of waiting for keys.
   export FZF_DEFAULT_OPTS=--filter=x
   for pair in '\C-r:history' '\C-t:files' '\ec:directories'; do
-    command=$(key_command "${pair%%:*}")
+    command=$(key_command "${pair%%:*}" <<< "$bindings")
     [ -n "$command" ]
     run_bash "$command < /dev/null"
     herdr_received --entrypoint "${pair#*:}"

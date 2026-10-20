@@ -3,7 +3,7 @@
 
 # Puts bin/ of this repository on PATH so that fzf-herdr can be called by name.
 # The path keeps links, so that a link updated by "herdr plugin update" also updates running shells.
-if __fzf_herdr_bin=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../bin" && pwd); then
+if __fzf_herdr_bin=$(CDPATH='' builtin cd -L -- "$(dirname -- "${BASH_SOURCE[0]}")/../bin" && builtin pwd -L); then
   [[ :$PATH: == *":$__fzf_herdr_bin:"* ]] || PATH=$__fzf_herdr_bin:$PATH
 fi
 unset __fzf_herdr_bin
