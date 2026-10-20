@@ -2,7 +2,7 @@ id = "skipbit.fzf-herdr"
 name = "fzf-herdr"
 version = "0.2.0"
 min_herdr_version = "0.9.3"
-description = "Open fzf in a Herdr popup for shell key bindings and fuzzy completion."
+description = "Open fzf in a herdr popup for shell key bindings and fuzzy completion."
 platforms = ["linux", "macos"]
 
 [[build]]
