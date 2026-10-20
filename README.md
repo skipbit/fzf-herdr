@@ -1,8 +1,8 @@
 # fzf-herdr
 
-Open [fzf](https://github.com/junegunn/fzf) in a [Herdr](https://herdr.dev) popup for shell key bindings and fuzzy completion.
+Open [fzf](https://github.com/junegunn/fzf) in a [herdr](https://herdr.dev) popup for shell key bindings and fuzzy completion.
 
-fzf-herdr does for Herdr what `fzf-tmux` does for tmux: it shows the fzf finder used by your shell's key bindings (CTRL-T, CTRL-R, ALT-C) and fuzzy completion (`**<TAB>`) in a Herdr popup.
+fzf-herdr does for herdr what `fzf-tmux` does for tmux: it shows the fzf finder used by your shell's key bindings (CTRL-T, CTRL-R, ALT-C) and fuzzy completion (`**<TAB>`) in a herdr popup.
 
 ## Requirements
 
@@ -56,7 +56,7 @@ To uninstall, run `herdr plugin unlink skipbit.fzf-herdr`, remove the line from 
 
 ## Usage
 
-Inside Herdr, CTRL-T, CTRL-R, ALT-C, and `**<TAB>` open fzf in a popup. Select and cancel as you do in plain fzf.
+Inside herdr, CTRL-T, CTRL-R, ALT-C, and `**<TAB>` open fzf in a popup. Select and cancel as you do in plain fzf.
 The popup is titled after what you are searching: `fzf: files` (CTRL-T), `fzf: history` (CTRL-R), `fzf: directories` (ALT-C), or `fzf: completion` (`**<TAB>`).
 
 `fzf-herdr` takes the same arguments as fzf, so you can also use it directly:
@@ -71,11 +71,11 @@ This popup is titled `fzf`. To use one of the titles above, set `FZF_HERDR_ENTRY
 git ls-files | FZF_HERDR_ENTRYPOINT=files fzf-herdr --multi
 ```
 
-Outside Herdr, or while another popup is open, fzf-herdr runs fzf in place.
+Outside herdr, or while another popup is open, fzf-herdr runs fzf in place.
 When the popup cannot be opened for another reason, such as the plugin being disabled or an unknown `FZF_HERDR_ENTRYPOINT`, it prints a one-line warning and runs fzf in place.
 
-In the popup, Herdr draws the frame, so fzf's `--height`, `--border`, and `--margin` are replaced with a narrow side margin.
-The popup receives `FZF_DEFAULT_COMMAND`, `FZF_DEFAULT_OPTS`, `FZF_DEFAULT_OPTS_FILE`, `PATH`, `RUNEWIDTH_EASTASIAN`, and `BAT_THEME` from your shell; other environment variables come from the Herdr server.
+In the popup, herdr draws the frame, so fzf's `--height`, `--border`, and `--margin` are replaced with a narrow side margin.
+The popup receives `FZF_DEFAULT_COMMAND`, `FZF_DEFAULT_OPTS`, `FZF_DEFAULT_OPTS_FILE`, `PATH`, `RUNEWIDTH_EASTASIAN`, and `BAT_THEME` from your shell; other environment variables come from the herdr server.
 
 ### Custom `_fzf_comprun`
 
@@ -104,7 +104,7 @@ _fzf_comprun() {
 
 ## Development
 
-Run the tests with [bats-core](https://github.com/bats-core/bats-core) and check the scripts with [ShellCheck](https://www.shellcheck.net):
+Run the tests with [bats-core](https://github.com/bats-core/bats-core) and check the scripts with [shellcheck](https://www.shellcheck.net):
 
 ```sh
 bats test/
@@ -112,7 +112,7 @@ shellcheck bin/fzf-herdr libexec/* test/fakes/* .github/scripts/*.sh
 shellcheck -s bash shell/*.bash test/*.bats test/helpers.bash
 ```
 
-Checks that need a real Herdr popup and key input are listed in [test/manual.md](test/manual.md).
+Checks that need a real herdr popup and key input are listed in [test/manual.md](test/manual.md).
 
 ## License
 
