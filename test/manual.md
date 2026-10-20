@@ -13,6 +13,13 @@ Run them on macOS and Linux before a release and after changing the popup or the
    source /path/to/fzf-herdr/shell/fzf-herdr.zsh
    ```
 
+   For bash, start it with `bash --norc` and load them in the same way:
+
+   ```bash
+   eval "$(fzf --bash)"
+   source /path/to/fzf-herdr/shell/fzf-herdr.bash
+   ```
+
 ## Install and update
 
 Run these with herdr 0.9.4 or later, from a branch pushed to GitHub (`--ref BRANCH`).
@@ -33,6 +40,18 @@ Run these with herdr 0.9.4 or later, from a branch pushed to GitHub (`--ref BRAN
 - [ ] `FZF_HERDR_WIDTH=80% FZF_HERDR_HEIGHT=80%` changes the popup size.
 - [ ] A `_fzf_comprun` defined before loading fzf-herdr is used for `**<TAB>` (in a popup when it calls `fzf-herdr`, titled `fzf: completion` when it sets `FZF_HERDR_ENTRYPOINT=completion`).
 - [ ] `echo a | fzf-herdr` opens a popup titled `fzf`.
+
+## Key bindings and completion (bash)
+
+Check these with the bash that ships with macOS (3.2) and with bash 4 or later, since they bind the keys in different ways.
+
+- [ ] CTRL-T opens fzf in a popup titled `fzf: files`, and the selected paths are inserted into the command line.
+- [ ] CTRL-R opens the history in a popup titled `fzf: history`, and the selected command replaces the command line.
+- [ ] ALT-C opens directories in a popup titled `fzf: directories`, and the shell changes to the selected directory.
+- [ ] `vim **<TAB>` opens path completion in a popup titled `fzf: completion`, and `cd **<TAB>` opens directory completion in the same popup.
+- [ ] Esc in the popup cancels each of the above and leaves the command line as it was.
+- [ ] A `_fzf_comprun` defined before loading fzf-herdr is used for `**<TAB>`.
+- [ ] In a bash started with `HERDR_ENV= bash --norc` and loaded as above, CTRL-T behaves as it does without fzf-herdr.
 
 ## Fallback to fzf in place
 
