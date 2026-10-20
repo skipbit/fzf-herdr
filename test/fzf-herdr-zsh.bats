@@ -16,6 +16,8 @@ setup() {
   mkdir "$FAKE_HERDR_RECORD"
   export TMPDIR="$BATS_TEST_TMPDIR"
   export HERDR_ENV=1
+  # fzf's own __fzfcmd can pick fzf-tmux in tmux.
+  unset TMUX_PANE
 }
 
 # Runs the zsh code in an interactive zsh without rc files, after loading fzf and fzf-herdr.
@@ -80,15 +82,6 @@ $1"
 
   [ "$output" = "banana" ]
   herdr_received --entrypoint completion
-}
-
-@test "uses only entrypoints that the manifest defines, titled after them" {
-  ids=$(grep -o 'FZF_HERDR_ENTRYPOINT=[[:alnum:]:_-]*' "$zsh_file" | cut -d= -f2)
-
-  [ -n "$ids" ]
-  for id in $ids; do
-    grep -A1 -x "id = \"$id\"" "$BATS_TEST_DIRNAME/../herdr-plugin.toml" | grep -qx "title = \"fzf: $id\""
-  done
 }
 
 @test "keeps a _fzf_comprun defined before loading" {

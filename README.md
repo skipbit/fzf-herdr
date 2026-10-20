@@ -7,12 +7,12 @@ fzf-herdr does for Herdr what `fzf-tmux` does for tmux: it shows the fzf finder 
 ## Requirements
 
 - herdr 0.9.3 or later
-- fzf, with its zsh integration (key bindings and completion) loaded
-- zsh (bash and fish are not supported yet)
+- fzf, with its shell integration (key bindings and completion) loaded
+- zsh or bash (fish is not supported yet)
 - bash, to run the scripts (the one that ships with macOS works)
 - macOS or Linux
 
-Tested with zsh 5.9 on macOS (herdr 0.9.5, fzf 0.74.4, bash 3.2) and Ubuntu 24.04 (herdr 0.9.5, fzf 0.56.0 and 0.74.2, bash 5.2). Version 0.1.0 was also tested with herdr 0.9.3.
+Tested with zsh 5.9 and bash 3.2 on macOS (herdr 0.9.5, fzf 0.74.4) and with zsh 5.9 and bash 5.2 on Ubuntu 24.04 (herdr 0.9.5, fzf 0.56.0 and 0.74.2). Version 0.1.0 was also tested with herdr 0.9.3.
 
 ## Installation
 
@@ -31,13 +31,20 @@ source <(fzf --zsh)
 source ~/.local/share/fzf-herdr/shell/fzf-herdr.zsh
 ```
 
+For bash, load it in `~/.bashrc` in the same way:
+
+```bash
+eval "$(fzf --bash)"
+source ~/.local/share/fzf-herdr/shell/fzf-herdr.bash
+```
+
 To update, run `herdr plugin update skipbit.fzf-herdr`. To recreate the link, run the install command again.
-To uninstall, run `herdr plugin uninstall skipbit.fzf-herdr`, remove the line from `~/.zshrc`, and delete the link.
+To uninstall, run `herdr plugin uninstall skipbit.fzf-herdr`, remove the line from `~/.zshrc` or `~/.bashrc`, and delete the link.
 
 ### From a clone
 
 You can also clone this repository anywhere you like and register it with herdr.
-Cloning it to `~/.local/share/fzf-herdr` keeps the line in `~/.zshrc` above as it is.
+Cloning it to `~/.local/share/fzf-herdr` keeps the lines above as they are.
 
 ```sh
 git clone https://github.com/skipbit/fzf-herdr.git ~/.local/share/fzf-herdr
@@ -45,7 +52,7 @@ herdr plugin link ~/.local/share/fzf-herdr
 ```
 
 To update, run `git -C ~/.local/share/fzf-herdr pull`.
-To uninstall, run `herdr plugin unlink skipbit.fzf-herdr`, remove the line from `~/.zshrc`, and delete the directory.
+To uninstall, run `herdr plugin unlink skipbit.fzf-herdr`, remove the line from `~/.zshrc` or `~/.bashrc`, and delete the directory.
 
 ## Usage
 
@@ -75,7 +82,7 @@ The popup receives `FZF_DEFAULT_COMMAND`, `FZF_DEFAULT_OPTS`, `FZF_DEFAULT_OPTS_
 If you define [`_fzf_comprun`](https://github.com/junegunn/fzf#customizing-fzf-options-for-completion) yourself, fzf-herdr keeps it.
 Call `fzf-herdr` instead of `fzf` in it to use the popup, and set `FZF_HERDR_ENTRYPOINT=completion` to title it `fzf: completion`:
 
-```zsh
+```sh
 _fzf_comprun() {
   local command=$1
   shift
@@ -102,7 +109,7 @@ Run the tests with [bats-core](https://github.com/bats-core/bats-core) and check
 ```sh
 bats test/
 shellcheck bin/fzf-herdr libexec/* test/fakes/* .github/scripts/*.sh
-shellcheck -s bash test/*.bats test/helpers.bash
+shellcheck -s bash shell/*.bash test/*.bats test/helpers.bash
 ```
 
 Checks that need a real Herdr popup and key input are listed in [test/manual.md](test/manual.md).
