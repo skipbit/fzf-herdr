@@ -1,7 +1,8 @@
 name: upstream-check
 
-# Every Monday, runs the checks of pr-check.yml with the latest fzf, bats-core, shellcheck, and fish on macOS.
-# Fails when they break fzf-herdr or are newer than the versions pinned in pr-check.yml.
+# Every Monday, runs the checks of pr-check.yml with the latest fzf, bats-core, and shellcheck,
+# and on macOS also with the latest fish and Homebrew's bash and zsh.
+# Fails when they break fzf-herdr, or when fzf, bats-core, shellcheck, or fish is newer than the version pinned in pr-check.yml.
 on:
   schedule:
     - cron: "0 0 * * 1" # Mondays 09:00 JST
@@ -50,8 +51,18 @@ jobs:
       - name: Install fish
         if: runner.os == 'macOS'
         run: .github/scripts/install-tools.sh fish "$FISH_VERSION"
+      - name: Install bash and zsh
+        if: runner.os == 'macOS'
+        run: brew install bash zsh
       - run: .github/scripts/install-tools.sh fzf "$FZF_VERSION"
       - run: .github/scripts/install-tools.sh bats "$BATS_VERSION"
+      - name: Show versions
+        run: |
+          bash --version | head -1
+          zsh --version
+          fish --version
+          fzf --version
+          bats --version
       - run: bats test/
 
   shellcheck:
