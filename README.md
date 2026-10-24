@@ -2,13 +2,13 @@
 
 Open [fzf](https://github.com/junegunn/fzf) in a [herdr](https://herdr.dev) popup for shell key bindings and fuzzy completion.
 
-fzf-herdr does for herdr what `fzf-tmux` does for tmux: it shows the fzf finder used by your shell's key bindings (CTRL-T, CTRL-R, ALT-C) and fuzzy completion (`**<TAB>`) in a herdr popup.
+fzf-herdr does for herdr what `fzf-tmux` does for tmux: it shows the fzf finder used by your shell's key bindings (CTRL-T, CTRL-R, ALT-C) and fuzzy completion (`**<TAB>`, or SHIFT-TAB in fish) in a herdr popup.
 
 ## Requirements
 
 - herdr 0.9.3 or later
 - fzf, with its shell integration (key bindings and completion) loaded
-- zsh or bash (fish is not supported yet)
+- zsh, bash, or fish 3.4 or later
 - bash, to run the scripts (the one that ships with macOS works)
 - macOS or Linux
 
@@ -38,8 +38,26 @@ eval "$(fzf --bash)"
 source ~/.local/share/fzf-herdr/shell/fzf-herdr.bash
 ```
 
+For fish, load it right after fzf's own line, in the same place.
+That is `~/.config/fish/config.fish`:
+
+```fish
+fzf --fish | source
+source ~/.local/share/fzf-herdr/shell/fzf-herdr.fish
+```
+
+If fzf's install script put its line in `fish_user_key_bindings`, load it there instead.
+fish runs that function after `config.fish`, and loading fzf again there undoes fzf-herdr.
+
+```fish
+function fish_user_key_bindings
+  fzf --fish | source
+  source ~/.local/share/fzf-herdr/shell/fzf-herdr.fish
+end
+```
+
 To update, run `herdr plugin update skipbit.fzf-herdr`. To recreate the link, run the install command again.
-To uninstall, run `herdr plugin uninstall skipbit.fzf-herdr`, remove the line from `~/.zshrc` or `~/.bashrc`, and delete the link.
+To uninstall, run `herdr plugin uninstall skipbit.fzf-herdr`, remove the line from your shell's configuration, and delete the link.
 
 ### From a clone
 
@@ -52,12 +70,13 @@ herdr plugin link ~/.local/share/fzf-herdr
 ```
 
 To update, run `git -C ~/.local/share/fzf-herdr pull`.
-To uninstall, run `herdr plugin unlink skipbit.fzf-herdr`, remove the line from `~/.zshrc` or `~/.bashrc`, and delete the directory.
+To uninstall, run `herdr plugin unlink skipbit.fzf-herdr`, remove the line from your shell's configuration, and delete the directory.
 
 ## Usage
 
-Inside herdr, CTRL-T, CTRL-R, ALT-C, and `**<TAB>` open fzf in a popup. Select and cancel as you do in plain fzf.
-The popup is titled after what you are searching: `fzf: files` (CTRL-T), `fzf: history` (CTRL-R), `fzf: directories` (ALT-C), or `fzf: completion` (`**<TAB>`).
+Inside herdr, CTRL-T, CTRL-R, ALT-C, and `**<TAB>` (SHIFT-TAB in fish) open fzf in a popup. Select and cancel as you do in plain fzf.
+The popup is titled after what you are searching: `fzf: files` (CTRL-T), `fzf: history` (CTRL-R), `fzf: directories` (ALT-C), or `fzf: completion` (`**<TAB>` or SHIFT-TAB).
+fzf's completion for fish (SHIFT-TAB) comes with fzf 0.68 or later.
 
 `fzf-herdr` takes the same arguments as fzf, so you can also use it directly:
 
@@ -94,6 +113,12 @@ _fzf_comprun() {
 }
 ```
 
+### Your own `fzf` function in fish
+
+From fzf 0.71, fzf's completion for fish runs `fzf` by name.
+fzf-herdr defines an `fzf` function that opens the popup for the completion and runs fzf in place otherwise.
+If you define `fzf` yourself (including with `alias`) before loading fzf-herdr, fzf-herdr keeps it, and the completion runs in place.
+
 ## Configuration
 
 | Variable               | Description                                                                          | Default |
@@ -111,6 +136,8 @@ bats test/
 shellcheck bin/fzf-herdr libexec/* test/fakes/* .github/scripts/*.sh
 shellcheck -s bash shell/*.bash test/*.bats test/helpers.bash
 ```
+
+The zsh and fish tests are skipped when the shell is not installed.
 
 Checks that need a real herdr popup and key input are listed in [test/manual.md](test/manual.md).
 

@@ -20,6 +20,14 @@ Run them on macOS and Linux before a release and after changing the popup or the
    source /path/to/fzf-herdr/shell/fzf-herdr.bash
    ```
 
+   For fish, start it with an empty configuration directory (`XDG_CONFIG_HOME=$(mktemp -d) fish`) and load them in the same way.
+   `fish --no-config` does not run `fish_user_key_bindings`, which one of the checks needs.
+
+   ```fish
+   fzf --fish | source
+   source /path/to/fzf-herdr/shell/fzf-herdr.fish
+   ```
+
 ## Install and update
 
 Run these with herdr 0.9.4 or later, from a branch pushed to GitHub (`--ref BRANCH`).
@@ -52,6 +60,20 @@ Check these with the bash that ships with macOS (3.2) and with bash 4 or later, 
 - [ ] Esc in the popup cancels each of the above and leaves the command line as it was.
 - [ ] A `_fzf_comprun` defined before loading fzf-herdr is used for `**<TAB>`.
 - [ ] In a bash started with `HERDR_ENV= bash --norc` and loaded as above, CTRL-T behaves as it does without fzf-herdr.
+
+## Key bindings and completion (fish)
+
+Check these with fish 3 and fish 4, since fzf's fish integration runs different code on them.
+
+- [ ] CTRL-T opens fzf in a popup titled `fzf: files`, and the selected paths are inserted into the command line.
+- [ ] CTRL-R opens the history in a popup titled `fzf: history`, and the selected command replaces the command line.
+- [ ] ALT-C opens directories in a popup titled `fzf: directories`, and the shell changes to the selected directory.
+- [ ] With fzf 0.68 or later, `vim ` and SHIFT-TAB open the completion in a popup titled `fzf: completion`, and the selected item is inserted into the command line.
+- [ ] Esc in the popup cancels each of the above and leaves the command line as it was.
+- [ ] `fzf` run from the command line opens in place.
+- [ ] With an `fzf` function defined before loading fzf-herdr (e.g. `function fzf; command fzf $argv; end`), SHIFT-TAB runs fzf in place.
+- [ ] With fzf and fzf-herdr loaded in `fish_user_key_bindings` as in the README, CTRL-T opens the popup, also after `set -g fish_key_bindings fish_vi_key_bindings`.
+- [ ] In a fish started with `HERDR_ENV=` and loaded as above, CTRL-T behaves as it does without fzf-herdr.
 
 ## Fallback to fzf in place
 
