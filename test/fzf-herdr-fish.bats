@@ -11,8 +11,7 @@ setup_file() {
 
 setup() {
   command -v fish > /dev/null || skip "fish is not installed"
-  # fzf-herdr.fish keeps .. in the path that it adds to PATH.
-  fish_file="$(cd "$BATS_TEST_DIRNAME/../shell" && pwd)/fzf-herdr.fish"
+  fish_file="$BATS_TEST_DIRNAME/../shell/fzf-herdr.fish"
   bin_dir=$(cd "$BATS_TEST_DIRNAME/../bin" && pwd)
   export HERDR_BIN_PATH="$BATS_TEST_DIRNAME/fakes/herdr"
   export FAKE_HERDR_RECORD="$BATS_TEST_TMPDIR/herdr"
@@ -58,6 +57,21 @@ $1"
   [ "$output" = "$BATS_TEST_TMPDIR/linked/bin/fzf-herdr" ]
 }
 
+@test "puts bin on PATH when loaded by a path with ./ or //" {
+  cd "$BATS_TEST_DIRNAME/../shell"
+
+  run fish --no-config -c "source ./fzf-herdr.fish; source ../shell//fzf-herdr.fish; string join \n -- \$PATH[1..2]"
+
+  [ "${lines[0]}" = "$bin_dir" ]
+  [ "${lines[1]}" != "$bin_dir" ]
+}
+
+@test "runs the rest of a function that loads it outside herdr" {
+  run env HERDR_ENV= fish --no-config -c "function fish_user_key_bindings; source '$fish_file'; echo after; end; fish_user_key_bindings"
+
+  [ "$output" = "after" ]
+}
+
 @test "adds bin to PATH only once" {
   run_fish "source '$fish_file'; count (string match -- '$bin_dir' \$PATH)"
 
@@ -84,6 +98,16 @@ $1"
   done
 }
 
+@test "picks the panes when fish translates its messages" {
+  unset LANGUAGE LC_ALL LC_MESSAGES
+  export LANG=de_DE.UTF-8
+
+  run_fish 'set -gx FZF_DEFAULT_OPTS --filter=x; fzf-file-widget < /dev/null'
+  herdr_received --entrypoint files
+  run_fish "printf '%s\n' apple banana | fzf_complete --filter ban"
+  herdr_received --entrypoint completion
+}
+
 @test "runs fzf's completion through fzf-herdr in herdr" {
   run_fish "printf '%s\n' apple banana | fzf_complete --filter ban"
 
@@ -94,6 +118,19 @@ $1"
   run_fish 'fzf-completion' 'function __fzf_complete_native; __fzfcmd; end; function fzf-completion; __fzf_complete_native; end'
 
   [ "$output" = "env FZF_HERDR_ENTRYPOINT=completion fzf-herdr" ]
+}
+
+@test "picks the completion pane for a custom completion that fzf's completion runs" {
+  local completion
+  # fzf_complete is fzf's completion from fzf 0.71, and fzf-completion is the one before it.
+  for completion in fzf_complete fzf-completion; do
+    rm -f "$FAKE_HERDR_RECORD/args"
+    run_fish "$completion" "function _fzf_complete_foo; __fzfcmd; echo apple | fzf --filter app; end; function $completion; _fzf_complete_foo; end"
+
+    [ "${lines[0]}" = "env FZF_HERDR_ENTRYPOINT=completion fzf-herdr" ]
+    [ "${lines[1]}" = "apple" ]
+    herdr_received --entrypoint completion
+  done
 }
 
 @test "runs fzf in place outside fzf's completion" {

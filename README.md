@@ -118,6 +118,7 @@ _fzf_comprun() {
 From fzf 0.71, fzf's completion for fish runs `fzf` by name.
 fzf-herdr defines an `fzf` function that opens the popup for the completion and runs fzf in place otherwise.
 If you define `fzf` yourself (including with `alias`) before loading fzf-herdr, fzf-herdr keeps it, and the completion runs in place.
+To keep the popup with options of your own, put them in `FZF_DEFAULT_OPTS` instead of an `fzf` function.
 
 ## Configuration
 
