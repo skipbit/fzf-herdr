@@ -30,11 +30,9 @@ Run them on macOS and Linux before a release and after changing the popup or the
 
 ## Install and update
 
-Run these with herdr 0.9.4 or later, from a branch pushed to GitHub (`--ref BRANCH`).
+Run these from a branch pushed to GitHub (`--ref BRANCH`).
 
-- [ ] `herdr plugin install skipbit/fzf-herdr` links `~/.local/share/fzf-herdr` to the installed plugin, and the line in the README loads it.
-- [ ] After `herdr plugin update skipbit.fzf-herdr` installs a new commit, the link points to the new installation, and CTRL-T still works in a shell opened before the update.
-- [ ] With a clone at `~/.local/share/fzf-herdr`, the install stops with a message and leaves the clone as it is.
+- [ ] On herdr 0.9.4 or later, after `herdr plugin update skipbit.fzf-herdr` installs a new commit, CTRL-T still works in a shell opened before the update.
 - [ ] On herdr 0.9.3, the install stops with a message to install from a clone.
 
 ## Key bindings and completion (zsh)
