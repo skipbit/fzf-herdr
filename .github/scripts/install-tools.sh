@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Installs a tool for the checks under $RUNNER_TEMP and puts it on PATH of the following steps.
-# Usage: install-tools.sh fzf|bats|shellcheck|fish VERSION
+# Usage: install-tools.sh fzf|bats|shellcheck|fish|herdr VERSION
 # fish is installed only on macOS; Ubuntu installs it with apt.
 set -euo pipefail
 
@@ -30,6 +30,20 @@ case $tool in
     curl -fsSL -o "$RUNNER_TEMP/fish.app.zip" "https://github.com/fish-shell/fish-shell/releases/download/$version/fish-$version.app.zip"
     ditto -x -k "$RUNNER_TEMP/fish.app.zip" "$RUNNER_TEMP/fish"
     dir=$RUNNER_TEMP/fish/fish-$version.app/Contents/Resources/base/usr/local/bin
+    ;;
+  herdr)
+    case $(uname -s) in
+      Darwin) os=macos ;;
+      *) os=linux ;;
+    esac
+    case $(uname -m) in
+      x86_64) arch=x86_64 ;;
+      *) arch=aarch64 ;;
+    esac
+    dir=$RUNNER_TEMP/herdr
+    mkdir -p "$dir"
+    curl -fsSL -o "$dir/herdr" "https://github.com/herdrdev/herdr/releases/download/v$version/herdr-$os-$arch"
+    chmod +x "$dir/herdr"
     ;;
   *)
     echo "install-tools.sh: unknown tool: $tool" >&2
