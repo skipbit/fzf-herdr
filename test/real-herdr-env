@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Runs a command for the tests with a real herdr, with a home of its own and only the variables given here.
+# XDG_DATA_HOME stays unset, as for most users, so the plugin links to HOME/.local/share/fzf-herdr.
+# A socket path is limited to about 100 bytes, so SOCKET goes in a short directory such as BATS_FILE_TMPDIR.
+# Usage: real-herdr-env HOME SOCKET [NAME=VALUE...] COMMAND [ARG...]
+
+home=$1 socket=$2
+shift 2
+# exec keeps the process ID, so that the tests stop the server and fzf-herdr that they start in the background.
+exec env -i HOME="$home" XDG_CONFIG_HOME="$home/.config" XDG_STATE_HOME="$home/.local/state" XDG_CACHE_HOME="$home/.cache" \
+  HERDR_CONFIG_PATH="$home/.config/herdr/config.toml" HERDR_SOCKET_PATH="$socket" "$@"

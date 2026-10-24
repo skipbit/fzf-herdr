@@ -81,7 +81,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: .github/scripts/install-tools.sh shellcheck "$SHELLCHECK_VERSION"
-      - run: shellcheck bin/fzf-herdr libexec/* test/fakes/* .github/scripts/*.sh
+      - run: shellcheck bin/fzf-herdr libexec/* test/fakes/* test/real-herdr-env .github/scripts/*.sh
       - run: shellcheck -s bash shell/*.bash test/*.bats test/helpers.bash
 
   pinned:

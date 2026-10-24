@@ -7,18 +7,14 @@ bats_require_minimum_version 1.5.0
 setup_file() {
   [[ -n ${FZF_HERDR_TEST_REAL_HERDR-} ]] || skip "set FZF_HERDR_TEST_REAL_HERDR to run the tests with a real herdr"
   command -v herdr > /dev/null || { echo "herdr is not installed" >&2; return 1; }
+  [[ $(herdr --version) != "herdr 0.9.3" ]] || skip "herdr 0.9.3 builds the plugin in a temporary directory; see test/manual.md"
   export BATS_TEST_TIMEOUT=20
 }
 
 setup() {
   local home=$BATS_TEST_TMPDIR/home
-  # No server listens on the socket, so herdr installs and updates the plugin by itself.
-  local env=(
-    env -i HOME="$home" XDG_CONFIG_HOME="$home/.config" XDG_DATA_HOME="$home/.local/share"
-    XDG_STATE_HOME="$home/.local/state" XDG_CACHE_HOME="$home/.cache"
-    HERDR_CONFIG_PATH="$home/.config/herdr/config.toml" HERDR_SOCKET_PATH="$BATS_FILE_TMPDIR/herdr.sock"
-    PATH="$PATH"
-  )
+  # The socket stays unused, so herdr installs and updates the plugin by itself.
+  local env=("$BATS_TEST_DIRNAME/real-herdr-env" "$home" "$BATS_FILE_TMPDIR/herdr.sock" PATH="$PATH")
   herdr=("${env[@]}" "$(command -v herdr)")
   git=("${env[@]}" git)
   repo=$BATS_TEST_TMPDIR/repo
@@ -33,7 +29,8 @@ email = test@example.com
 insteadOf = https://github.com/skipbit/fzf-herdr.git
 EOF
   # The repository holds the working tree as it is, committed or not.
-  tar -C "$BATS_TEST_DIRNAME/.." --exclude=.git -cf - . | tar -C "$repo" -xf -
+  tar -C "$BATS_TEST_DIRNAME/.." --exclude=.git -cf "$BATS_TEST_TMPDIR/tree.tar" .
+  tar -C "$repo" -xf "$BATS_TEST_TMPDIR/tree.tar"
   "${git[@]}" -C "$repo" init -q
   "${git[@]}" -C "$repo" add -A
   "${git[@]}" -C "$repo" commit -qm test
@@ -46,10 +43,11 @@ plugin_root() {
 
 # Succeeds when the link points to the plugin that herdr loads, at the commit of the repository.
 links_installed_plugin() {
-  local root
+  local root target
   root=$(plugin_root)
+  target=$(readlink "$link")
   [ -n "$root" ]
-  [ "$(readlink "$link")" = "$(cd "$root" && pwd -P)" ]
+  [ "$target" = "$(cd "$root" && pwd -P)" ]
   [ "$("${git[@]}" -C "$link" rev-parse HEAD)" = "$("${git[@]}" -C "$repo" rev-parse HEAD)" ]
   [ -f "$link/shell/fzf-herdr.zsh" ]
 }
@@ -86,12 +84,13 @@ links_installed_plugin() {
 
 @test "stops the install and leaves a directory in place of the link alone" {
   mkdir -p "$link"
+  touch "$link/clone"
 
   run --separate-stderr "${herdr[@]}" plugin install --yes skipbit/fzf-herdr
 
   [ "$status" -eq 1 ]
-  [ -d "$link" ]
   [ ! -L "$link" ]
+  [ "$(ls -A "$link")" = clone ]
   "${herdr[@]}" plugin list --json | grep -qF '"plugins":[]'
   [[ $stderr == *"fzf-herdr: $link is not a link; remove it, or keep using it with \"herdr plugin link\""* ]]
 }

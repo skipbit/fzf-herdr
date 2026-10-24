@@ -63,13 +63,7 @@ teardown() {
 
 # Sets the commands that reach only the test server: herdr, and in_pane, which runs a command as in a pane of the server.
 set_commands() {
-  local home=$BATS_FILE_TMPDIR/home
-  local env=(
-    env -i HOME="$home" XDG_CONFIG_HOME="$home/.config" XDG_DATA_HOME="$home/.local/share"
-    XDG_STATE_HOME="$home/.local/state" XDG_CACHE_HOME="$home/.cache"
-    HERDR_CONFIG_PATH="$home/.config/herdr/config.toml" HERDR_SOCKET_PATH="$BATS_FILE_TMPDIR/herdr.sock"
-    TERM=xterm-256color
-  )
+  local env=("$BATS_TEST_DIRNAME/real-herdr-env" "$BATS_FILE_TMPDIR/home" "$BATS_FILE_TMPDIR/herdr.sock" TERM=xterm-256color)
   herdr=("${env[@]}" PATH="$PATH" "$(command -v herdr)")
   in_pane=("${env[@]}" HERDR_ENV=1 HERDR_BIN_PATH="$(command -v herdr)" TMPDIR="$BATS_FILE_TMPDIR" PATH="$BATS_FILE_TMPDIR/bin:$PATH")
 }
