@@ -17,13 +17,10 @@ setup() {
 
 teardown() {
   local pid
-  # bats runs its timeout as a job of the test and stops it itself.
   for pid in $(jobs -p); do
-    if [[ $pid != "${BATS_killer_pid-}" ]]; then
-      kill "$pid" 2> /dev/null
-      wait "$pid" 2> /dev/null || true
-    fi
+    kill "$pid" 2> /dev/null
   done
+  wait 2> /dev/null || true
 }
 
 # Stands in for fzf-herdr and records SIGUSR1 as the "notified" file.
