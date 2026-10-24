@@ -1,6 +1,6 @@
 name: pr-check
 
-# Runs the bats tests on macOS and Ubuntu and shellcheck on every PR and every push to main.
+# Runs the bats tests on macOS and Ubuntu, including the tests with a real herdr, and shellcheck on every PR and every push to main.
 # The tools are pinned to their latest releases; upstream-check.yml reports newer ones.
 on:
   pull_request:
@@ -20,6 +20,7 @@ env:
   BATS_VERSION: 1.14.0
   SHELLCHECK_VERSION: 0.11.0
   FISH_VERSION: 4.9.3
+  HERDR_VERSION: 0.9.5
 
 jobs:
   bats:
@@ -28,6 +29,7 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - name: Install zsh and fish
@@ -38,6 +40,7 @@ jobs:
         run: .github/scripts/install-tools.sh fish "$FISH_VERSION"
       - run: .github/scripts/install-tools.sh fzf "$FZF_VERSION"
       - run: .github/scripts/install-tools.sh bats "$BATS_VERSION"
+      - run: .github/scripts/install-tools.sh herdr "$HERDR_VERSION"
       - name: Show versions
         run: |
           bash --version | head -1
@@ -45,7 +48,10 @@ jobs:
           fish --version
           fzf --version
           bats --version
+          herdr --version
       - run: bats test/
+        env:
+          FZF_HERDR_TEST_REAL_HERDR: 1
 
   shellcheck:
     runs-on: ubuntu-latest

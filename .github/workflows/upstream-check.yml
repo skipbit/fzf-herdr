@@ -1,8 +1,8 @@
 name: upstream-check
 
-# Every Monday, runs the checks of pr-check.yml with the latest fzf, bats-core, and shellcheck,
+# Every Monday, runs the checks of pr-check.yml with the latest fzf, bats-core, shellcheck, and herdr,
 # and on macOS also with the latest fish and Homebrew's bash and zsh.
-# Fails when they break fzf-herdr, or when fzf, bats-core, shellcheck, or fish is newer than the version pinned in pr-check.yml.
+# Fails when they break fzf-herdr, or when fzf, bats-core, shellcheck, fish, or herdr is newer than the version pinned in pr-check.yml.
 on:
   schedule:
     - cron: "0 0 * * 1" # Mondays 09:00 JST
@@ -19,6 +19,7 @@ jobs:
       bats: ${{ steps.versions.outputs.bats }}
       shellcheck: ${{ steps.versions.outputs.shellcheck }}
       fish: ${{ steps.versions.outputs.fish }}
+      herdr: ${{ steps.versions.outputs.herdr }}
     steps:
       - id: versions
         env:
@@ -30,6 +31,7 @@ jobs:
             echo "bats=$(latest bats-core/bats-core)"
             echo "shellcheck=$(latest koalaman/shellcheck)"
             echo "fish=$(latest fish-shell/fish-shell)"
+            echo "herdr=$(latest herdrdev/herdr)"
           } | tee -a "$GITHUB_OUTPUT"
 
   bats:
@@ -39,10 +41,12 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     env:
       FZF_VERSION: ${{ needs.latest.outputs.fzf }}
       BATS_VERSION: ${{ needs.latest.outputs.bats }}
       FISH_VERSION: ${{ needs.latest.outputs.fish }}
+      HERDR_VERSION: ${{ needs.latest.outputs.herdr }}
     steps:
       - uses: actions/checkout@v7
       - name: Install zsh and fish
@@ -56,6 +60,7 @@ jobs:
         run: brew install bash zsh
       - run: .github/scripts/install-tools.sh fzf "$FZF_VERSION"
       - run: .github/scripts/install-tools.sh bats "$BATS_VERSION"
+      - run: .github/scripts/install-tools.sh herdr "$HERDR_VERSION"
       - name: Show versions
         run: |
           bash --version | head -1
@@ -63,7 +68,10 @@ jobs:
           fish --version
           fzf --version
           bats --version
+          herdr --version
       - run: bats test/
+        env:
+          FZF_HERDR_TEST_REAL_HERDR: 1
 
   shellcheck:
     needs: latest
@@ -84,12 +92,13 @@ jobs:
       BATS_VERSION: ${{ needs.latest.outputs.bats }}
       SHELLCHECK_VERSION: ${{ needs.latest.outputs.shellcheck }}
       FISH_VERSION: ${{ needs.latest.outputs.fish }}
+      HERDR_VERSION: ${{ needs.latest.outputs.herdr }}
     steps:
       - uses: actions/checkout@v7
       - name: Compare with the versions pinned in pr-check.yml
         run: |
           status=0
-          for name in FZF_VERSION BATS_VERSION SHELLCHECK_VERSION FISH_VERSION; do
+          for name in FZF_VERSION BATS_VERSION SHELLCHECK_VERSION FISH_VERSION HERDR_VERSION; do
             pinned=$(sed -n "s/^  $name: //p" .github/workflows/pr-check.yml)
             if [ "$pinned" != "${!name}" ]; then
               echo "::error::$name in pr-check.yml is $pinned, but the latest release is ${!name}"

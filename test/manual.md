@@ -1,6 +1,6 @@
 # Manual checks
 
-These checks cover what `bats test/` cannot: the real herdr popup, key input, and the shell's line editor.
+These checks cover what needs a person: key input, how the herdr popup looks, and the shell's line editor.
 Run them on macOS and Linux before a release and after changing the popup or the shell integration.
 
 ## Setup
@@ -79,6 +79,5 @@ Check these with fish 3 and fish 4, since fzf's fish integration runs different 
 
 - [ ] In a shell opened in a popup (a `type = "popup"` custom command), CTRL-T runs fzf in place without a warning.
 - [ ] `sleep 3; echo a | fzf-herdr`, then open Settings or copy mode within 3 seconds: fzf opens without a warning (herdr 0.9.3 shows the popup on top of them), and Esc closes it.
-- [ ] `echo a | FZF_HERDR_ENTRYPOINT=missing fzf-herdr` prints one warning and runs fzf in place.
 - [ ] With the plugin disabled (`herdr plugin disable skipbit.fzf-herdr`), CTRL-T prints one warning and runs fzf in place. Enable it again afterwards.
 - [ ] In a shell outside herdr, CTRL-T behaves as it does without fzf-herdr (including fzf-tmux inside tmux).

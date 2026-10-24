@@ -139,8 +139,14 @@ shellcheck -s bash shell/*.bash test/*.bats test/helpers.bash
 ```
 
 The zsh and fish tests are skipped when the shell is not installed.
+The tests with a real herdr are skipped unless `FZF_HERDR_TEST_REAL_HERDR` is set.
+They start a herdr server of their own, apart from the one you use:
 
-Checks that need a real herdr popup and key input are listed in [test/manual.md](test/manual.md).
+```sh
+FZF_HERDR_TEST_REAL_HERDR=1 bats test/
+```
+
+Checks that need a person, such as key input in the popup, are listed in [test/manual.md](test/manual.md).
 
 ## License
 
