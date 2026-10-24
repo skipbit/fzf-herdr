@@ -41,6 +41,7 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     env:
       FZF_VERSION: ${{ needs.latest.outputs.fzf }}
       BATS_VERSION: ${{ needs.latest.outputs.bats }}

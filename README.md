@@ -146,7 +146,7 @@ They start a herdr server of their own, apart from the one you use:
 FZF_HERDR_TEST_REAL_HERDR=1 bats test/
 ```
 
-Checks that need key input in a real herdr popup are listed in [test/manual.md](test/manual.md).
+Checks that need a person, such as key input in the popup, are listed in [test/manual.md](test/manual.md).
 
 ## License
 
