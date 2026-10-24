@@ -45,7 +45,9 @@ wait_for_file() {
 start_with_slow_fzf() {
   use_fake_fzf
   export FAKE_FZF_SLEEP=5
-  printf 'candidate\n' | "$fzf_herdr" > /dev/null 3>&- &
+  printf 'candidate\n' > "$BATS_TEST_TMPDIR/candidates"
+  # fzf-herdr is the job itself, so that teardown stops it.
+  "$fzf_herdr" < "$BATS_TEST_TMPDIR/candidates" > /dev/null 3>&- &
   caller_pid=$!
   wait_for_file "$FAKE_HERDR_RECORD/args"
   session_dir=$(herdr_env_value _FZF_HERDR_DIR)
