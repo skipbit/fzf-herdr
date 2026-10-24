@@ -1,6 +1,6 @@
 name: upstream-check
 
-# Every Monday, runs the checks of pr-check.yml with the latest fzf, bats-core, and shellcheck.
+# Every Monday, runs the checks of pr-check.yml with the latest fzf, bats-core, shellcheck, and fish on macOS.
 # Fails when they break fzf-herdr or are newer than the versions pinned in pr-check.yml.
 on:
   schedule:
@@ -17,6 +17,7 @@ jobs:
       fzf: ${{ steps.versions.outputs.fzf }}
       bats: ${{ steps.versions.outputs.bats }}
       shellcheck: ${{ steps.versions.outputs.shellcheck }}
+      fish: ${{ steps.versions.outputs.fish }}
     steps:
       - id: versions
         env:
@@ -27,6 +28,7 @@ jobs:
             echo "fzf=$(latest junegunn/fzf)"
             echo "bats=$(latest bats-core/bats-core)"
             echo "shellcheck=$(latest koalaman/shellcheck)"
+            echo "fish=$(latest fish-shell/fish-shell)"
           } | tee -a "$GITHUB_OUTPUT"
 
   bats:
@@ -39,11 +41,15 @@ jobs:
     env:
       FZF_VERSION: ${{ needs.latest.outputs.fzf }}
       BATS_VERSION: ${{ needs.latest.outputs.bats }}
+      FISH_VERSION: ${{ needs.latest.outputs.fish }}
     steps:
       - uses: actions/checkout@v7
-      - name: Install zsh
+      - name: Install zsh and fish
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y zsh
+        run: sudo apt-get update && sudo apt-get install -y zsh fish
+      - name: Install fish
+        if: runner.os == 'macOS'
+        run: .github/scripts/install-tools.sh fish "$FISH_VERSION"
       - run: .github/scripts/install-tools.sh fzf "$FZF_VERSION"
       - run: .github/scripts/install-tools.sh bats "$BATS_VERSION"
       - run: bats test/
@@ -66,12 +72,13 @@ jobs:
       FZF_VERSION: ${{ needs.latest.outputs.fzf }}
       BATS_VERSION: ${{ needs.latest.outputs.bats }}
       SHELLCHECK_VERSION: ${{ needs.latest.outputs.shellcheck }}
+      FISH_VERSION: ${{ needs.latest.outputs.fish }}
     steps:
       - uses: actions/checkout@v7
       - name: Compare with the versions pinned in pr-check.yml
         run: |
           status=0
-          for name in FZF_VERSION BATS_VERSION SHELLCHECK_VERSION; do
+          for name in FZF_VERSION BATS_VERSION SHELLCHECK_VERSION FISH_VERSION; do
             pinned=$(sed -n "s/^  $name: //p" .github/workflows/pr-check.yml)
             if [ "$pinned" != "${!name}" ]; then
               echo "::error::$name in pr-check.yml is $pinned, but the latest release is ${!name}"

@@ -19,6 +19,7 @@ env:
   FZF_VERSION: 0.74.5
   BATS_VERSION: 1.14.0
   SHELLCHECK_VERSION: 0.11.0
+  FISH_VERSION: 4.9.3
 
 jobs:
   bats:
@@ -29,15 +30,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
-      - name: Install zsh
+      - name: Install zsh and fish
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y zsh
+        run: sudo apt-get update && sudo apt-get install -y zsh fish
+      - name: Install fish
+        if: runner.os == 'macOS'
+        run: .github/scripts/install-tools.sh fish "$FISH_VERSION"
       - run: .github/scripts/install-tools.sh fzf "$FZF_VERSION"
       - run: .github/scripts/install-tools.sh bats "$BATS_VERSION"
       - name: Show versions
         run: |
           bash --version | head -1
           zsh --version
+          fish --version
           fzf --version
           bats --version
       - run: bats test/

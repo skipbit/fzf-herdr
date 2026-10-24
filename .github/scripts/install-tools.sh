@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Installs a tool for the checks under $RUNNER_TEMP and puts it on PATH of the following steps.
-# Usage: install-tools.sh fzf|bats|shellcheck VERSION
+# Usage: install-tools.sh fzf|bats|shellcheck|fish VERSION
+# fish is installed only on macOS; Ubuntu installs it with apt.
 set -euo pipefail
 
 tool=$1
@@ -24,6 +25,11 @@ case $tool in
   shellcheck)
     curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/v$version/shellcheck-v$version.linux.x86_64.tar.xz" | tar -xJ -C "$RUNNER_TEMP"
     dir=$RUNNER_TEMP/shellcheck-v$version
+    ;;
+  fish)
+    curl -fsSL -o "$RUNNER_TEMP/fish.app.zip" "https://github.com/fish-shell/fish-shell/releases/download/$version/fish-$version.app.zip"
+    ditto -x -k "$RUNNER_TEMP/fish.app.zip" "$RUNNER_TEMP/fish"
+    dir=$RUNNER_TEMP/fish/fish-$version.app/Contents/Resources/base/usr/local/bin
     ;;
   *)
     echo "install-tools.sh: unknown tool: $tool" >&2

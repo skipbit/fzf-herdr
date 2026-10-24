@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Links this checkout to a fixed place, so that ~/.zshrc or ~/.bashrc can load the shell integration from there.
+# Links this checkout to a fixed place, so that the shell's configuration can load the shell integration from there.
 # herdr runs this as the build command of "herdr plugin install" and "herdr plugin update".
 # Problems end with status 1, since herdr shows the output of a build only when the build fails.
 
