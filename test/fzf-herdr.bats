@@ -20,10 +20,13 @@ setup() {
 
 teardown() {
   local pid
+  # bats runs its timeout as a job of the test and stops it itself.
   for pid in $(jobs -p); do
-    kill "$pid" 2> /dev/null
+    if [[ $pid != "${BATS_killer_pid-}" ]]; then
+      kill "$pid" 2> /dev/null
+      wait "$pid" 2> /dev/null || true
+    fi
   done
-  wait 2> /dev/null || true
 }
 
 use_fake_fzf() {
