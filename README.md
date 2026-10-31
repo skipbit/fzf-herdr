@@ -4,6 +4,8 @@ Open [fzf](https://github.com/junegunn/fzf) in a [herdr](https://herdr.dev) popu
 
 fzf-herdr does for herdr what `fzf-tmux` does for tmux: it shows the fzf finder used by your shell's key bindings (CTRL-T, CTRL-R, ALT-C) and fuzzy completion (`**<TAB>`, or SHIFT-TAB in fish) in a herdr popup.
 
+![fzf-herdr opening fzf in herdr popups for CTRL-T, CTRL-R, ALT-C, and **<TAB>](https://skipbit.github.io/assets/fzf-herdr/demo.gif)
+
 ## Requirements
 
 - herdr 0.9.3 or later
