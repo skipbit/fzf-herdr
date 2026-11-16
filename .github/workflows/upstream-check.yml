@@ -1,6 +1,6 @@
 name: upstream-check
 
-# Every Monday, runs the checks of pr-check.yml with the latest fzf, bats-core, shellcheck, and herdr,
+# Every Monday, runs the checks of pr-check.yml, except the ones with fish 3, with the latest fzf, bats-core, shellcheck, and herdr,
 # and on macOS also with the latest fish and Homebrew's bash and zsh.
 # Fails when they break fzf-herdr, or when fzf, bats-core, shellcheck, fish, or herdr is newer than the version pinned in pr-check.yml.
 on:

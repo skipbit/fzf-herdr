@@ -29,7 +29,8 @@ case $tool in
   fish)
     curl -fsSL -o "$RUNNER_TEMP/fish.app.zip" "https://github.com/fish-shell/fish-shell/releases/download/$version/fish-$version.app.zip"
     ditto -x -k "$RUNNER_TEMP/fish.app.zip" "$RUNNER_TEMP/fish"
-    dir=$RUNNER_TEMP/fish/fish-$version.app/Contents/Resources/base/usr/local/bin
+    apps=("$RUNNER_TEMP"/fish/*.app)
+    dir=${apps[0]}/Contents/Resources/base/usr/local/bin
     ;;
   herdr)
     case $(uname -s) in
